@@ -1,0 +1,46 @@
+version: '3.1'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:alpine3.17
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - ./Postgresql:/var/lib/postgresql/data
+    ports:
+      - "1010:5432"
+    networks:
+      - horus
+
+  symfony:
+    container_name: symfony
+    build:
+      context: ./Symfony
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: always
+    depends_on: [postgres]
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Symfony/public:/var/www/html/
+      - ./Symfony:/var/www/
+    networks:
+      - horus
+
+  mailcatcher:
+    container_name: mailcatcher
+    image: dockage/mailcatcher
+    restart: on-failure
+    networks:
+      - horus
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+networks:
+  horus:
+    driver: bridge
+

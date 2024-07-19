@@ -1,0 +1,27 @@
+FROM php:8.3
+ARG COMPOSER_ALLOW_SUPERUSER=1
+WORKDIR /var/www/
+
+RUN apt-get update && \
+    apt-get install -y libicu-dev libpq-dev libzip-dev unzip git && \
+    docker-php-ext-install intl pdo pdo_pgsql zip && \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug
+
+### install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+### copy project files
+COPY . .
+###install dependencies
+RUN composer install
+
+### jwt
+RUN     set -e &&\
+        apt-get install openssl &&\
+        apt-get install acl
+        #bin/console lexik:jwt:generate-keypair --overwrite &&\
+        #setfacl -R -m u:www-data:rX -m u:"$(whoami)":rwX config/jwt &&\
+        #setfacl -dR -m u:www-data:rX -m u:"$(whoami)":rwX config/jwt
+        
+CMD ["php", "-S", "0.0.0.0:80", "-t", "./public", "./public/index.php"]
