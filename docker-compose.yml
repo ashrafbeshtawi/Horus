@@ -40,6 +40,23 @@ services:
     ports:
       - "1080:1080"
       - "1025:1025"
+        
+        
+  nuxtjs:
+    container_name: nuxtjs
+    build:
+      context: ./Nuxt
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - NUXT_HOST=${FRONTEND_HOST}
+      - NUXT_PORT=${FRONTEND_PORT}
+    ports:
+      [ "3000:3000" ]
+    volumes:
+      [ ./Nuxt:/Nuxt/ ]
+    networks:
+      - horus
 networks:
   horus:
     driver: bridge
