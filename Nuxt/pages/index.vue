@@ -1,34 +1,40 @@
 <template>
-  <section class="w-full h-screen relative">
-    <TresCanvas class="w-full h-screen bg-transparent">
-      <TresMesh ref="boxRef" cast-shadow>
-        <TresBoxGeometry  />
-        <TresMeshNormalMaterial />
-      </TresMesh>
-    </TresCanvas>
+  <section id="container" class="w-full h-screen relative">
   </section>
 </template>
 
 <style scoped>
 </style>
 <script setup>
-import { shallowRef } from 'vue'
-import { useRenderLoop } from '@tresjs/core'
 
-const { onLoop } = useRenderLoop()
-
-const position = { x: 0, y: 0, z: 0 }
-const boxRef = shallowRef(null)
-
-onLoop(({ elapsed, delta }) => {
-  if (boxRef.value) {
-    boxRef.value.rotation.y += delta
-    boxRef.value.rotation.z = elapsed * 0.2  }
-})
 </script>
 
 <script>
-export default {
+import * as THREE from 'three';
 
+export default {
+  mounted() {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setAnimationLoop(animate);
+    document.getElementById('container').appendChild(renderer.domElement);
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    camera.position.z = 5;
+
+    function animate() {
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+      renderer.render(scene, camera);
+
+    }
+  },
 };
 </script>
