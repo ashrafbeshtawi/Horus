@@ -1,16 +1,11 @@
 <template>
   <div>
-    <NuxtLink to="/" class="w-12 h-10 rounded-lg bg-white items-center justify-center flex font-bold shadow-md">
-      <div>
-        Main
-      </div>
+    <NuxtLink to="/">
+      <UButton color="sky" variant="solid">Main</UButton>
     </NuxtLink>
-    <NuxtLink to="/projects" class="w-12 h-10 rounded-lg bg-white items-center justify-center flex font-bold shadow-md">
-      <div>
-        Projects
-      </div>
+    <NuxtLink to="/projects">
+      <UButton color="sky" variant="solid">Projects</UButton>
     </NuxtLink>
-
     <NuxtLayout>
       <v-app>
         <NuxtPage/>
