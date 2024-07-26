@@ -31,12 +31,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import gsap from 'gsap';
 import {TrackballControls} from "three/examples/jsm/controls/TrackballControls.js";
+import {Matrix4, Vector3} from "three";
 
 export default {
   data() {
     return {
       isWebGL2Available: true,
-      mixer: null,
+      mixers: [],
       camera: null,
       scene: null,
       renderer: null,
@@ -60,18 +61,22 @@ export default {
     const light = new THREE.AmbientLight( 0xffffff, 6);
     scene.add(light);
 
-    this.loadModell('/modell2/scene.gltf', scene);
     
-    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.loadModell('/town/scene.gltf', scene, ['The Life']);
+    this.loadWhales(scene)
+    
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
     const clock = new THREE.Clock();
     const reference = this;
     function animate() {
       // animate the loaded modell
-      if (reference.mixer !== null) {
-        reference.mixer.update(clock.getDelta())
+      for (let i = 0; i < reference.mixers.length; i++) {
+        //console.log(reference);
+        reference.mixers[i].update(clock.getDelta())
+
       }
       reference.renderer.render(scene, reference.camera);
-      reference.moveToStartingPoint(true);
+      //reference.moveToStartingPoint(true);
     }
   },
   methods: {
@@ -80,18 +85,28 @@ export default {
       camera.position.set(-39, -3, 41);
       return camera;
     },
-    loadModell: function (path, scene) {
+    loadModell: function (
+        path,
+        scene,
+        neededAnimations,
+        scale = 1,
+        rotation = [0, 0, 0]
+    ) {
       const loader = new GLTFLoader();
-      const setterFunction = this.setMixer;
+      const mixers = this.getMixersArray();
       loader.load(path, function (gltf) {
             const model = gltf.scene;
+            model.scale.setScalar(scale);
+            model.rotation.set(rotation[0], rotation[1], rotation[2])
             scene.add(model);
             let mixer = new THREE.AnimationMixer(model);
             const clips = gltf.animations;
-            const clip = THREE.AnimationClip.findByName(clips, 'The Life');
-            const action = mixer.clipAction(clip);
-            action.play();
-            setterFunction(mixer);
+            for (let i = 0; i < neededAnimations.length; i++) {
+              const clip = THREE.AnimationClip.findByName(clips, neededAnimations[i]);
+              const action = mixer.clipAction(clip);
+              action.play();
+            }
+            mixers.push(mixer);
           },
           undefined,
           function (error) {
@@ -99,8 +114,8 @@ export default {
           }
       );
     },
-    setMixer: function (mixer) {
-      this.mixer = mixer;
+    getMixersArray: function () {
+      return this.mixers;
     },
     switchLookAt: function () {
       const coordinates = prompt('enter x,y,z:').split(',');
@@ -122,7 +137,15 @@ export default {
           }
       )
     },
-
+    loadWhales: function (scene) {
+      this.loadModell(
+          '/blue_whale/scene.gltf',
+          scene,
+          ['Swimming'],
+          0.01,
+          [0, 0.5 * Math.PI, 0]
+      );
+    }
   },
 };
 </script>
