@@ -1,6 +1,7 @@
 <template>
-  <button v-on:click="updateCoordinates">update coordinates</button>
-  <div>{{coordinates}}</div>
+  <button v-on:click="switchLookAt">look at</button>
+
+  <div>{{camera?.position.x}}, {{camera?.position.y}}, {{camera?.position.z}}</div>
   <section
       id="container"
       class="w-full h-screen relative"
@@ -29,35 +30,39 @@ import WebGL from 'three/addons/capabilities/WebGL.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import gsap from 'gsap';
+import {TrackballControls} from "three/examples/jsm/controls/TrackballControls.js";
 
 export default {
   data() {
     return {
       isWebGL2Available: true,
-      coordinates: '',
       mixer: null,
+      camera: null,
+      scene: null,
+      renderer: null,
       calledFromAnimate: false
     }
   },
   mounted() {
     this.isWebGL2Available = WebGL.isWebGL2Available();
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setAnimationLoop(animate);
-    document.getElementById('container').appendChild(renderer.domElement);
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setAnimationLoop(animate);
+    document.getElementById('container').appendChild(this.renderer.domElement);
     
+    this.camera = this.getCamera();
     const scene = new THREE.Scene();
-    const camera = this.getCamera();
-    const cube = this.getCube(1, 1, 1, 5, 8, 0);
-    const axesHelper = new THREE.AxesHelper(50);
-    this.loadModell('/modell2/scene.gltf', scene, this.setMixer);
-    const light = new THREE.AmbientLight( 0xffffff, 6);
-    
-    scene.add(light);
-    scene.add(axesHelper);
-    scene.add(cube);
+    scene.background = new THREE.Color('#87CEEB');
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const axesHelper = new THREE.AxesHelper(50);
+    scene.add(axesHelper);
+
+    const light = new THREE.AmbientLight( 0xffffff, 6);
+    scene.add(light);
+
+    this.loadModell('/modell2/scene.gltf', scene);
+    
+    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
     const clock = new THREE.Clock();
     const reference = this;
     function animate() {
@@ -65,29 +70,19 @@ export default {
       if (reference.mixer !== null) {
         reference.mixer.update(clock.getDelta())
       }
-      reference.coordinates = camera.position;
-      controls.update();
-      renderer.render(scene, camera);
-      reference.updateCoordinates(camera);
-      reference.moveToStartingPoint(camera);
+      reference.renderer.render(scene, reference.camera);
+      reference.moveToStartingPoint(true);
     }
   },
   methods: {
     getCamera: function () {
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
       camera.position.set(-39, -3, 41);
-      camera.lookAt(0, 0, 0);
       return camera;
     },
-    getCube: function (width, height, depth, x, y, z) {
-      const geometry = new THREE.BoxGeometry(width, height, depth);
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(x, y, z);
-      return cube;
-    },
-    loadModell: function (path, scene, setterFunction) {
+    loadModell: function (path, scene) {
       const loader = new GLTFLoader();
+      const setterFunction = this.setMixer;
       loader.load(path, function (gltf) {
             const model = gltf.scene;
             scene.add(model);
@@ -107,18 +102,23 @@ export default {
     setMixer: function (mixer) {
       this.mixer = mixer;
     },
-    updateCoordinates: function (camera) {
-      this.coordinates = camera.position;
+    switchLookAt: function () {
+      const coordinates = prompt('enter x,y,z:').split(',');
+      this.camera.lookAt(
+      parseInt(coordinates[0]),
+          parseInt(coordinates[1]),
+          parseInt(coordinates[2])
+      );
     },
-    moveToStartingPoint: function (camera, callFromAnimate) {
+    moveToStartingPoint: function (callFromAnimate) {
       if (callFromAnimate && this.calledFromAnimate) {
         return;
       }
       this.calledFromAnimate = true;
-      gsap.to(camera.position, {x:30, y:20, z: 40, duration: 3}).then(
+      let anim = gsap.to(this.camera.position, {x:30, y:20, z: 40, duration: 3});
+      anim.then(
           () => {
-            gsap.to(camera.position, {x:12, y:2, z: 31, duration: 1});
-            camera.position.set(12, 2, 31)
+            gsap.to(this.camera.position, {x:11, y:2, z: 30, duration: 1});
           }
       )
     },
