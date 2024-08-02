@@ -51,7 +51,7 @@ export default {
 
     const light = new THREE.AmbientLight( 0xffffff, 6);
     scene.add(light);
-    
+
     graphicUtils.loadModell(
         '/town/scene.gltf',
         scene,
@@ -65,8 +65,9 @@ export default {
     const reference = this;
     function animate() {
       // animate the loaded modell
+      const delta = clock.getDelta();
       for (let i = 0; i < reference.mixers.length; i++) {
-        reference.mixers[i].update(clock.getDelta())
+        reference.mixers[i].update(delta);
       }
       reference.renderer.render(scene, reference.camera);
       
@@ -86,7 +87,7 @@ export default {
           scene,
           ['Swimming'],
           this.getMixersArray,
-          0.01,
+          0.05,
           [0, 0.5 * Math.PI, 0]
       );
     }
