@@ -51,7 +51,6 @@ export default {
 
     const light = new THREE.AmbientLight( 0xffffff, 6);
     scene.add(light);
-
     
     graphicUtils.loadModell(
         '/town/scene.gltf',
