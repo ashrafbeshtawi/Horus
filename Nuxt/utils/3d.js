@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import gsap from "gsap";
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export default {
     initRenderer: (animateFunction, containerElementId) => {
@@ -21,5 +22,35 @@ export default {
                 gsap.to(camera.position, {x:11, y:2, z: 30, duration: 1});
             }
         )
+    },
+    loadModell: function (
+        path,
+        scene,
+        neededAnimations,
+        mixerGetterFunction,
+        scale = 1,
+        rotation = [0, 0, 0]
+    ) {
+        const loader = new GLTFLoader();
+        const mixers = mixerGetterFunction();
+        loader.load(path, function (gltf) {
+                const model = gltf.scene;
+                model.scale.setScalar(scale);
+                model.rotation.set(rotation[0], rotation[1], rotation[2])
+                scene.add(model);
+                let mixer = new THREE.AnimationMixer(model);
+                const clips = gltf.animations;
+                for (let i = 0; i < neededAnimations.length; i++) {
+                    const clip = THREE.AnimationClip.findByName(clips, neededAnimations[i]);
+                    const action = mixer.clipAction(clip);
+                    action.play();
+                }
+                mixers.push(mixer);
+            },
+            undefined,
+            function (error) {
+                console.error(error);
+            }
+        );
     },
 }

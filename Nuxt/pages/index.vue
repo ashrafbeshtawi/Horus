@@ -25,11 +25,8 @@
 <script>
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import graphicUtils from '../utils/3d.js'
-import {TrackballControls} from "three/examples/jsm/controls/TrackballControls.js";
-import {Matrix4, Vector3} from "three";
+import graphicUtils from '../utils/3d.js';
 
 export default {
   data() {
@@ -56,7 +53,12 @@ export default {
     scene.add(light);
 
     
-    this.loadModell('/town/scene.gltf', scene, ['The Life']);
+    graphicUtils.loadModell(
+        '/town/scene.gltf',
+        scene,
+        ['The Life'],
+        this.getMixersArray
+    );
     this.loadWhales(scene)
     
     //const controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -66,7 +68,6 @@ export default {
       // animate the loaded modell
       for (let i = 0; i < reference.mixers.length; i++) {
         reference.mixers[i].update(clock.getDelta())
-
       }
       reference.renderer.render(scene, reference.camera);
       
@@ -77,43 +78,15 @@ export default {
     }
   },
   methods: {
-    loadModell: function (
-        path,
-        scene,
-        neededAnimations,
-        scale = 1,
-        rotation = [0, 0, 0]
-    ) {
-      const loader = new GLTFLoader();
-      const mixers = this.getMixersArray();
-      loader.load(path, function (gltf) {
-            const model = gltf.scene;
-            model.scale.setScalar(scale);
-            model.rotation.set(rotation[0], rotation[1], rotation[2])
-            scene.add(model);
-            let mixer = new THREE.AnimationMixer(model);
-            const clips = gltf.animations;
-            for (let i = 0; i < neededAnimations.length; i++) {
-              const clip = THREE.AnimationClip.findByName(clips, neededAnimations[i]);
-              const action = mixer.clipAction(clip);
-              action.play();
-            }
-            mixers.push(mixer);
-          },
-          undefined,
-          function (error) {
-            console.error(error);
-          }
-      );
-    },
     getMixersArray: function () {
       return this.mixers;
     },
     loadWhales: function (scene) {
-      this.loadModell(
+      graphicUtils.loadModell(
           '/blue_whale/scene.gltf',
           scene,
           ['Swimming'],
+          this.getMixersArray,
           0.01,
           [0, 0.5 * Math.PI, 0]
       );
