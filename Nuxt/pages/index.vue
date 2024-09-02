@@ -33,6 +33,7 @@ export default {
     return {
       isWebGL2Available: true,
       mixers: [],
+      whales: [],
       camera: null,
       scene: null,
       renderer: null,
@@ -56,11 +57,11 @@ export default {
         '/town/scene.gltf',
         scene,
         ['The Life'],
-        this.getMixersArray
+        this
     );
     this.loadWhales(scene)
     
-    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
     const clock = new THREE.Clock();
     const reference = this;
     function animate() {
@@ -70,6 +71,11 @@ export default {
         reference.mixers[i].update(delta);
       }
       reference.renderer.render(scene, reference.camera);
+      // move whales
+      for (let i = 0; i < reference.whales.length; i++) {
+        let x = reference.whales[i].position.x;
+        reference.whales[i].position.x = x > 150 ? -115 : reference.whales[i].position.x + 0.01; 
+      }
       
       if (!reference.introPlayed) {
         reference.introPlayed = true;
@@ -81,14 +87,18 @@ export default {
     getMixersArray: function () {
       return this.mixers;
     },
+    getWhalesArray: function () {
+      return this.whales;
+    },
     loadWhales: function (scene) {
       graphicUtils.loadModell(
           '/blue_whale/scene.gltf',
           scene,
           ['Swimming'],
-          this.getMixersArray,
-          0.05,
-          [0, 0.5 * Math.PI, 0]
+          this,
+          0.01,
+          [0, 0.5 * Math.PI, 0],
+          true
       );
     }
   },

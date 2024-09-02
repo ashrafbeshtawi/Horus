@@ -27,14 +27,16 @@ export default {
         path,
         scene,
         neededAnimations,
-        mixerGetterFunction,
+        thisReference,
         scale = 1,
-        rotation = [0, 0, 0]
+        rotation = [0, 0, 0],
+        addToWhales = false
     ) {
         const loader = new GLTFLoader();
-        const mixers = mixerGetterFunction();
+        const mixers = thisReference.getMixersArray();
+        const models = thisReference.getWhalesArray();
         loader.load(path, function (gltf) {
-                const model = gltf.scene;
+                let model = gltf.scene;
                 model.scale.setScalar(scale);
                 model.rotation.set(rotation[0], rotation[1], rotation[2])
                 scene.add(model);
@@ -46,6 +48,9 @@ export default {
                     action.play();
                 }
                 mixers.push(mixer);
+                if (addToWhales) {
+                    models.push(model)
+                }
             },
             undefined,
             function (error) {
