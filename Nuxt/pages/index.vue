@@ -45,6 +45,10 @@ export default {
     this.isWebGL2Available = WebGL.isWebGL2Available();
     this.renderer = graphicUtils.initRenderer(animate, 'container');
     this.camera = graphicUtils.getCamera();
+    const audioListener = new THREE.AudioListener();
+    this.camera.add(audioListener);
+    graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
+    
     const scene = new THREE.Scene();
     
     scene.background = new THREE.Color('#87CEEB');
