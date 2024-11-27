@@ -48,9 +48,9 @@ export default {
     const audioListener = new THREE.AudioListener();
     this.camera.add(audioListener);
     graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
-    
     const scene = new THREE.Scene();
-    
+    graphicUtils.addButtons(scene);
+
     scene.background = new THREE.Color('#87CEEB');
 
     const light = new THREE.AmbientLight( 0xffffff, 6);
@@ -64,7 +64,7 @@ export default {
     );
     this.loadWhales(scene)
     
-    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
     const clock = new THREE.Clock();
     const reference = this;
     function animate() {

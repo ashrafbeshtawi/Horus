@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import gsap from "gsap";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {FontLoader} from "three/examples/jsm/loaders/FontLoader.js";
+import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry.js";
 
 export default {
     initRenderer: (animateFunction, containerElementId) => {
@@ -9,6 +11,44 @@ export default {
         renderer.setAnimationLoop(animateFunction);
         document.getElementById(containerElementId).appendChild(renderer.domElement);
         return renderer;
+    },
+    addButtons: function (scene) {
+        const fontLoader = new FontLoader();
+        fontLoader.load(
+            'https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json',
+            (font) => {
+                const textGeometry = new TextGeometry('Click Me', {
+                    font: font,
+                    size: 0.5,
+                    height: 0.2,
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.02,
+                    bevelSize: 0.05,
+                    bevelSegments: 8
+                });
+
+                // Create a material for the text
+                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+                // Create a mesh for the text
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.set(11, 2, 30);
+                scene.add(textMesh);
+
+                // Add event listeners for mouse interactions
+                textMesh.addEventListener('pointerover', () => {
+                    textMesh.scale.set(1.1, 1.1, 1.1);
+                });
+                textMesh.addEventListener('pointerout', () => {
+                    textMesh.scale.set(1, 1, 1);
+                });
+                textMesh.addEventListener('click', () => {
+                    console.log('Button clicked!');
+                });
+            }
+        );
+
     },
     getCamera: function () {
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
