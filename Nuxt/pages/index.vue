@@ -27,6 +27,7 @@ import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import graphicUtils from '../utils/3d.js';
+import helper from '../utils/helper.js';
 
 export default {
   data() {
@@ -47,8 +48,6 @@ export default {
     const scene = new THREE.Scene();
     
     scene.background = new THREE.Color('#87CEEB');
-    const axesHelper = new THREE.AxesHelper(50);
-    scene.add(axesHelper);
 
     const light = new THREE.AmbientLight( 0xffffff, 6);
     scene.add(light);
@@ -61,7 +60,7 @@ export default {
     );
     this.loadWhales(scene)
     
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
     const clock = new THREE.Clock();
     const reference = this;
     function animate() {
@@ -91,15 +90,22 @@ export default {
       return this.whales;
     },
     loadWhales: function (scene) {
-      graphicUtils.loadModell(
-          '/blue_whale/scene.gltf',
-          scene,
-          ['Swimming'],
-          this,
-          0.01,
-          [0, 0.5 * Math.PI, 0],
-          true
-      );
+      for (let i = 0; i < 10; i++) {
+        graphicUtils.loadModell(
+            '/blue_whale/scene.gltf',
+            scene,
+            ['Swimming'],
+            this,
+            helper.getRandomFloat(0.001, 0.01),
+            [0, 0.5 * Math.PI, 0],
+            [
+                helper.getRandomInt(-70, 40),
+              helper.getRandomInt(20, 32),
+              helper.getRandomInt(-25, 50)
+            ],
+            true
+        );
+      }
     }
   },
 };

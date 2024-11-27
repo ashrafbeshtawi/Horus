@@ -8,15 +8,15 @@ cp .env-example .env
 cp symfony/.env-example symfony/.env
 
 # Run the Docker Containers
-docker-compose up -d --force-recreate
+docker compose up -d --force-recreate
 
 # Install Symfony Dependencies
 docker exec symfony composer install
 
-# Generate the SSL keys
-docker exec symfony bin/console lexik:jwt:generate-keypair
+# Generate the SSL keys (Fix me later by installing package)
+#docker exec symfony bin/console lexik:jwt:generate-keypair
 
-# Run Symfony Database Migration
-docker exec symfony bin/console doctrine:migrations:migrate
+# Run Symfony Database Migration (Fix me later by installing package)
+#docker exec symfony bin/console doctrine:migrations:migrate
 
 

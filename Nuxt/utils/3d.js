@@ -30,7 +30,8 @@ export default {
         thisReference,
         scale = 1,
         rotation = [0, 0, 0],
-        addToWhales = false
+        position = null,
+        addToWhales = false,
     ) {
         const loader = new GLTFLoader();
         const mixers = thisReference.getMixersArray();
@@ -38,7 +39,10 @@ export default {
         loader.load(path, function (gltf) {
                 let model = gltf.scene;
                 model.scale.setScalar(scale);
-                model.rotation.set(rotation[0], rotation[1], rotation[2])
+                model.rotation.set(rotation[0], rotation[1], rotation[2]);
+                if (position) {
+                    model.position.set(position[0], position[1], position[2]);
+                }
                 scene.add(model);
                 let mixer = new THREE.AnimationMixer(model);
                 const clips = gltf.animations;
