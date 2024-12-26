@@ -1,7 +1,7 @@
 <template>
   <div>{{camera?.position.x}}, {{camera?.position.y}}, {{camera?.position.z}}</div>
   <div v-if="!animationStarted" id="overlay">
-    <button @click="startAnimation">Start your Adventure</button>
+    <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
       id="container"
       class="w-full h-screen relative"
@@ -143,20 +143,6 @@ export default {
   z-index: 9999;
 }
 
-/* Button styling */
-#overlay button {
-  padding: 20px 40px;
-  font-size: 1.5rem;
-  background-color: #2b6cee;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
 
-#overlay button:hover {
-  background-color: #0f3685;
-}
 
 </style>
