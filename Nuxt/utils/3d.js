@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import gsap from "gsap";
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FontLoader} from "three/examples/jsm/loaders/FontLoader.js";
 import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry.js";
 
@@ -52,14 +52,17 @@ export default {
     },
     getCamera: function () {
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
-        camera.position.set(-39, -3, 41);
+        camera.position.set(-46, 10, -23);
+        camera.rotation.set(-2, -1, -2);
         return camera;
     },
     moveToStartingPoint: function (camera) {
-        let anim = gsap.to(camera.position, {x:30, y:20, z: 40, duration: 3});
+        let anim = gsap.to(camera.position, {x:-13, y:24, z: 53, duration: 3});
+        gsap.to(camera.rotation, {x:-0.4, y:-0.22, z: -0.1, duration: 3})
         anim.then(
             () => {
-                gsap.to(camera.position, {x:11, y:2, z: 30, duration: 1});
+                gsap.to(camera.position, {x:12, y:1.7, z: 29, duration: 1});
+                gsap.to(camera.rotation, {x:-0.05, y:0.4, z: 0.02, duration: 1});
             }
         )
     },
@@ -112,5 +115,8 @@ export default {
             sound.setVolume( 0.5 );
         });
         return sound;
+    },
+    load3dMenuLibrary: async function() {
+        return await import('three-mesh-ui');
     }
 }

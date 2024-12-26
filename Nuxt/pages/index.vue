@@ -1,5 +1,7 @@
 <template>
-  <div>{{camera?.position.x}}, {{camera?.position.y}}, {{camera?.position.z}}</div>
+  <v-btn @click="this.debugCamera()">Show Position</v-btn>
+  <v-btn @click="this.setRotation()">Set Rotation</v-btn>
+
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -20,16 +22,18 @@
 
 <style scoped>
 </style>
-<script setup>
 
+<script setup>
 </script>
 
 <script>
+
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import graphicUtils from '../utils/3d.js';
 import helper from '../utils/helper.js';
+import {markRaw} from 'vue'
 
 export default {
   data() {
@@ -42,57 +46,46 @@ export default {
       camera: null,
       scene: null,
       renderer: null,
-      introPlayed: false
+      introPlayed: false,
+      ThreeMeshUI: null,
+      clock: new THREE.Clock(),
     }
   },
   mounted() {
-    this.isWebGL2Available = WebGL.isWebGL2Available();
-    this.renderer = graphicUtils.initRenderer(animate, 'container');
+    graphicUtils.load3dMenuLibrary().then(
+        library => {
+          this.ThreeMeshUI = library;
+        }
+    );
     this.camera = graphicUtils.getCamera();
+    this.scene = markRaw(new THREE.Scene());
+    this.renderer = markRaw(graphicUtils.initRenderer(this.animate, 'container'));
+    this.isWebGL2Available = WebGL.isWebGL2Available();
+    
     const audioListener = new THREE.AudioListener();
     this.camera.add(audioListener);
+    
+    // adding music
     this.soundObject = graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
-    const scene = new THREE.Scene();
-    graphicUtils.addButtons(scene);
 
-    scene.background = new THREE.Color('#87CEEB');
+    graphicUtils.addButtons(this.scene);
+    
+    // setting light & background color
+    this.scene.background = new THREE.Color('#87CEEB');
+    const light = new THREE.AmbientLight(0xffffff, 6);
+    this.scene.add(light);
 
-    const light = new THREE.AmbientLight( 0xffffff, 6);
-    scene.add(light);
-
+    // loading modells
     graphicUtils.loadModell(
         '/town/scene.gltf',
-        scene,
+        this.scene,
         ['The Life'],
         this
     );
-    this.loadWhales(scene)
-    
-    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
-    const clock = new THREE.Clock();
-    const reference = this;
-    function animate() {
-      //console.log(reference.$data.startAnimation);
-      if (!reference.$data.animationStarted) {
-        return;
-      }
-      // animate the loaded modell
-      const delta = clock.getDelta();
-      for (let i = 0; i < reference.mixers.length; i++) {
-        reference.mixers[i].update(delta);
-      }
-      reference.renderer.render(scene, reference.camera);
-      // move whales
-      for (let i = 0; i < reference.whales.length; i++) {
-        let x = reference.whales[i].position.x;
-        reference.whales[i].position.x = x > 150 ? -115 : reference.whales[i].position.x + 0.01; 
-      }
-      
-      if (!reference.introPlayed) {
-        reference.introPlayed = true;
-        graphicUtils.moveToStartingPoint(reference.camera);
-      }
-    }
+    this.loadWhales(this.scene)
+
+    // uncomment for debugging :)
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
   },
   methods: {
     getMixersArray: function () {
@@ -122,11 +115,46 @@ export default {
     startAnimation: function () {
       this.animationStarted = true;
       this.soundObject.context.resume();
+    },
+    animate: function() {
+      //console.log(this.camera.position);
+      if (!this.animationStarted) {
+        return;
+      }
+      if (this.ThreeMeshUI) {
+        this.ThreeMeshUI.update();
+      }
+
+      // animate the loaded modell
+      const delta = this.clock.getDelta();
+      for (let i = 0; i < this.mixers.length; i++) {
+        this.mixers[i].update(delta);
+      }
+      this.renderer.render(this.scene, this.camera);
+
+      // move whales
+      for (let i = 0; i < this.whales.length; i++) {
+        let x = this.whales[i].position.x;
+        this.whales[i].position.x = x > 150 ? -115 : this.whales[i].position.x + 0.01;
+      }
+
+      if (!this.introPlayed) {
+        this.introPlayed = true;
+        graphicUtils.moveToStartingPoint(this.camera);
+      }
+    },
+    debugCamera: function () {
+      console.log(this.camera.position);
+      console.log(this.camera.rotation);
+
+    },
+    setRotation: function () {
+      let c = prompt('Enter x,y,z').split(',').map(num => parseFloat(num));
+      this.camera.lookAt(c[0], c[1], c[2]);
     }
   },
 };
 </script>
-
 
 <style scoped>
 /* Style for the floating overlay */
@@ -142,7 +170,4 @@ export default {
   align-items: center;
   z-index: 9999;
 }
-
-
-
 </style>

@@ -17,6 +17,7 @@
     "gsap": "^3.12.5",
     "nuxt": "^3.12.4",
     "three": "^0.166.1",
+    "three-mesh-ui": "^6.5.4",
     "vue": "latest"
   },
   "devDependencies": {
