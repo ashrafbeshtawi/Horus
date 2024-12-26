@@ -1,6 +1,8 @@
 <template>
   <div>{{camera?.position.x}}, {{camera?.position.y}}, {{camera?.position.z}}</div>
-  <section
+  <div v-if="!animationStarted" id="overlay">
+    <button @click="startAnimation">Start your Adventure</button>
+  </div>  <section
       id="container"
       class="w-full h-screen relative"
       v-if="isWebGL2Available"
@@ -33,6 +35,8 @@ export default {
   data() {
     return {
       isWebGL2Available: true,
+      animationStarted: false,
+      soundObject: null,
       mixers: [],
       whales: [],
       camera: null,
@@ -47,7 +51,7 @@ export default {
     this.camera = graphicUtils.getCamera();
     const audioListener = new THREE.AudioListener();
     this.camera.add(audioListener);
-    graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
+    this.soundObject = graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
     const scene = new THREE.Scene();
     graphicUtils.addButtons(scene);
 
@@ -64,10 +68,14 @@ export default {
     );
     this.loadWhales(scene)
     
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
     const clock = new THREE.Clock();
     const reference = this;
     function animate() {
+      //console.log(reference.$data.startAnimation);
+      if (!reference.$data.animationStarted) {
+        return;
+      }
       // animate the loaded modell
       const delta = clock.getDelta();
       for (let i = 0; i < reference.mixers.length; i++) {
@@ -110,7 +118,45 @@ export default {
             true
         );
       }
+    },
+    startAnimation: function () {
+      this.animationStarted = true;
+      this.soundObject.context.resume();
     }
   },
 };
 </script>
+
+
+<style scoped>
+/* Style for the floating overlay */
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Button styling */
+#overlay button {
+  padding: 20px 40px;
+  font-size: 1.5rem;
+  background-color: #2b6cee;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#overlay button:hover {
+  background-color: #0f3685;
+}
+
+</style>

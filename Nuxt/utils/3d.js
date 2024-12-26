@@ -106,18 +106,11 @@ export default {
         const sound = new THREE.Audio(audioListener);
         sound.autoplay = true;
         const audioLoader = new THREE.AudioLoader();
-        audioLoader.load( path, function( buffer ) {
+        audioLoader.load(path, function( buffer) {
             sound.setBuffer(buffer);
             sound.setLoop( true );
             sound.setVolume( 0.5 );
-            sound.play();
-            ['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(event => {
-                document.addEventListener(event, () => {
-                    if (sound.context.state === 'suspended') {
-                        sound.context.resume();
-                    }
-                }, false);
-            });
         });
+        return sound;
     }
 }
