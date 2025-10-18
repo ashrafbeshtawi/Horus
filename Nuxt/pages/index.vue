@@ -1,7 +1,5 @@
 <template>
   <v-btn @click="this.debugCamera()">Show Position</v-btn>
-  <v-btn @click="this.setRotation()">Set Rotation</v-btn>
-
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -147,10 +145,6 @@ export default {
       console.log(this.camera.position);
       console.log(this.camera.rotation);
 
-    },
-    setRotation: function () {
-      let c = prompt('Enter x,y,z').split(',').map(num => parseFloat(num));
-      this.camera.lookAt(c[0], c[1], c[2]);
     }
   },
 };
