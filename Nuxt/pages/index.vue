@@ -1,5 +1,5 @@
 <template>
-  <v-btn @click="this.debugCamera()">Show Position</v-btn>
+  <!--<v-btn @click="this.debugCamera()">Show Position</v-btn>-->
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -85,34 +85,149 @@ export default {
     // adding music
     this.soundObject = graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
 
+    // Skills Section - Backend Toolkit
     graphicUtils.addButtons(
       this.scene, 
       this.clickableObjects,
-      'Click Me',
+      'Backend',
       {
-        title: 'Amazing Content',
-        text: 'This is a longer description that will be wrapped across multiple lines. It provides detailed information about what this button represents and gives context to the user.',
-        imageUrl: 'https://picsum.photos/800/500', // Optional
-        url: 'https://example.com', // Optional
-        urlText: 'Learn More' // Optional, defaults to 'View More'
+        title: 'Backend Toolkit',
+        text: 'My core backend development skills include PHP and Symfony for robust application development, PostgreSQL for reliable data management, RESTful API design for seamless integrations, Docker for containerization, and JSON Schema for data validation.',
+        imageUrl: 'https://picsum.photos/800/500?random=1',
+        url: null,
+        urlText: null
       },
-      [11, 2, 30],
+      [9.3, 2.7, 30],
+      [20, 8, 10],
+      [20, 8, 24],
       this.handleButtonClick
     );
-    
-    // Example button without image
+
+    // Skills Section - AI & Crypto
     graphicUtils.addButtons(
       this.scene, 
       this.clickableObjects,
-      'Another',
+      'AI & Crypto',
       {
-        title: 'Simple Info',
-        text: 'This panel has no image, just text and a link.',
-        url: 'https://google.com',
+        title: 'AI & Crypto Adventures',
+        text: 'Exploring the cutting edge of technology through Python for AI development, Solidity for smart contract programming, and Next.js for modern web applications. I am passionate about building intelligent systems and blockchain solutions.',
+        imageUrl: 'https://picsum.photos/800/500?random=2',
+        url: null,
+        urlText: null
       },
-      [15, 2, 25],
+      [13, 2.7, 30],
+      [20, 8, 10],
+      [20, 8, 24],
       this.handleButtonClick
-    );    
+    );
+
+    // Skills Section - Languages
+    graphicUtils.addButtons(
+      this.scene, 
+      this.clickableObjects,
+      'Languages',
+      {
+        title: 'Languages I Speak',
+        text: 'Communication is key, and I am fortunate to be fluent in German, English, and Arabic. This allows me to connect and collaborate effectively across diverse environments and cultures.',
+        imageUrl: null,
+        url: null,
+        urlText: null
+      },
+      [16.7, 2.7, 30],
+      [20, 8, 10],
+      [20, 8, 24],
+      this.handleButtonClick
+    );
+
+    // Projects Section - AmygdalaGPT
+    graphicUtils.addButtons(
+      this.scene, 
+      this.clickableObjects,
+      'AmygdalaGPT',
+      {
+        title: 'AmygdalaGPT',
+        text: 'A memory-augmented LLM system that enhances the natural language processing capabilities of large language models by integrating an external memory module. This project aims to make LLMs more dynamic and context-aware.',
+        imageUrl: 'https://picsum.photos/800/500?random=3',
+        url: 'https://github.com/ashrafbeshtawi/AmygdalaGPT',
+        urlText: 'View Project'
+      },
+      [9.3, 1, 30],
+      [20, 8, 10],
+      [20, 8, 24],
+      this.handleButtonClick
+    );
+
+    // Projects Section - Auto-Trader
+    graphicUtils.addButtons(
+      this.scene, 
+      this.clickableObjects,
+      'Auto-Trader',
+      {
+        title: 'Auto-Trader',
+        text: 'A sophisticated Bitcoin trading evolution simulator. This project simulates different trading strategies and market conditions to optimize trading performance over time.',
+        imageUrl: 'https://picsum.photos/800/500?random=4',
+        url: 'https://github.com/ashrafbeshtawi/Auto-Trader',
+        urlText: 'View Project'
+      },
+      [13, 1, 30],
+      [20, 8, 10],
+      [20, 8, 24],
+      this.handleButtonClick
+    );
+
+    // Projects Section - Landlord
+    graphicUtils.addButtons(
+      this.scene, 
+      this.clickableObjects,
+      'Landlord',
+      {
+        title: 'Landlord',
+        text: 'An innovative crypto token with a built-in profit distribution mechanism. This project explores the use of smart contracts to automate profit sharing among token holders.',
+        imageUrl: 'https://picsum.photos/800/500?random=5',
+        url: 'https://github.com/ashrafbeshtawi/Landlord',
+        urlText: 'View Project'
+      },
+      [16.7, 1, 30],
+      [20, 8, 10],
+      [20, 8, 24],
+      this.handleButtonClick
+    );
+
+    // About Section
+    graphicUtils.addButtons(
+      this.scene, 
+      this.clickableObjects,
+      'About Me',
+      {
+        title: 'About Me',
+        text: 'I am a passionate backend developer with a strong interest in AI and Crypto. Based in the vibrant city of Berlin, I focus on crafting robust and scalable systems while continuously exploring the exciting frontiers of technology.',
+        imageUrl: 'https://picsum.photos/128/128',
+        url: null,
+        urlText: null
+      },
+      [11, 3.5, 30],
+      [20, 8, 10],
+      [20, 8, 24],
+      this.handleButtonClick
+    );
+
+    // Contact Section
+    graphicUtils.addButtons(
+      this.scene, 
+      this.clickableObjects,
+      'Contact',
+      {
+        title: 'Get In Touch',
+        text: 'Feel free to reach out to me via email or connect with me on LinkedIn. I am always open to discussing new projects, creative ideas, or opportunities to be part of your visions.',
+        imageUrl: null,
+        url: 'https://www.linkedin.com/in/ashraf-beshtawi-1308a11a8/',
+        urlText: 'LinkedIn'
+      },
+      [14, 3.5, 30],
+      [20, 8, 10],
+      [20, 8, 24],
+      this.handleButtonClick
+    );
     // setting light & background color
     this.scene.background = new THREE.Color('#87CEEB');
     const light = new THREE.AmbientLight(0xffffff, 6);
@@ -208,16 +323,16 @@ export default {
       this.panelObjects = graphicUtils.createInfoPanel(
         this.scene,
         buttonData.config,
-        [0, 5, 10],
+        buttonData.panelPosition,
         this.clickableObjects,
         this.handleBackButton
       );
       
       // Move camera to view the panel
       gsap.to(this.camera.position, {
-        x: 0,
-        y: 5,
-        z: 22,
+        x: buttonData.panelCameraPosition[0],
+        y: buttonData.panelCameraPosition[1],
+        z: buttonData.panelCameraPosition[2],
         duration: 1.5,
         onComplete: () => {
           this.currentView = 'panel';

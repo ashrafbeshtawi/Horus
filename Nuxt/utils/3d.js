@@ -12,7 +12,7 @@ export default {
         document.getElementById(containerElementId).appendChild(renderer.domElement);
         return renderer;
     },
-    addButtons: function (scene, clickableObjectsArray, title, config, position, onClickCallback) {
+    addButtons: function (scene, clickableObjectsArray, title, config, buttonPosition, panelPosition, panelCameraPosition, onClickCallback) {
         const fontLoader = new FontLoader();
         fontLoader.load(
             'https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json',
@@ -28,7 +28,7 @@ export default {
                 });
                 
                 const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
-                buttonMesh.position.set(position[0], position[1], position[2]);
+                buttonMesh.position.set(buttonPosition[0], buttonPosition[1], buttonPosition[2]);
                 scene.add(buttonMesh);
                 
                 // Create text
@@ -49,9 +49,9 @@ export default {
                 
                 // Position text centered on button
                 textMesh.position.set(
-                    position[0] - textWidth / 2,
-                    position[1] - textHeight / 2,
-                    position[2] + buttonDepth / 2 + 0.05
+                    buttonPosition[0] - textWidth / 2,
+                    buttonPosition[1] - textHeight / 2,
+                    buttonPosition[2] + buttonDepth / 2 + 0.05
                 );
                 
                 scene.add(textMesh);
@@ -62,6 +62,9 @@ export default {
                 buttonMesh.userData.title = title;
                 buttonMesh.userData.config = config;
                 buttonMesh.userData.onClick = onClickCallback;
+                buttonMesh.userData.panelPosition = panelPosition;
+                buttonMesh.userData.panelCameraPosition = panelCameraPosition;
+
                 
                 // Add to clickable objects array
                 clickableObjectsArray.push(buttonMesh);
@@ -349,8 +352,8 @@ export default {
         gsap.to(camera.rotation, {x:-0.4, y:-0.22, z: -0.1, duration: 3})
         anim.then(
             () => {
-                gsap.to(camera.position, {x:12, y:1.7, z: 29, duration: 1});
-                gsap.to(camera.rotation, {x:-0.05, y:0.4, z: 0.02, duration: 1});
+                gsap.to(camera.position, {x:9.6, y:1.8, z: 37, duration: 1});
+                gsap.to(camera.rotation, {x:-0.043, y:0.32, z: 0.0138, duration: 1});
             }
         )
     },
