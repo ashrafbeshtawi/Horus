@@ -169,8 +169,8 @@ export default {
                     textureLoader.load(
                         config.imageUrl,
                         (texture) => {
-                            const imageWidth = 8;
-                            const imageHeight = 5;
+                            const imageWidth = 10;
+                            const imageHeight = 6.5;
                             const imageGeometry = new THREE.PlaneGeometry(imageWidth, imageHeight);
                             const imageMaterial = new THREE.MeshBasicMaterial({ 
                                 map: texture,
@@ -180,7 +180,7 @@ export default {
                             const imageMesh = new THREE.Mesh(imageGeometry, imageMaterial);
                             imageMesh.position.set(
                                 position[0],
-                                position[1] + currentY - imageHeight / 2,
+                                position[1] * 1.2, 
                                 position[2] + 0.1
                             );
                             panelGroup.add(imageMesh);

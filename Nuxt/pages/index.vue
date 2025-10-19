@@ -93,7 +93,6 @@ export default {
       {
         title: 'Backend Toolkit',
         text: 'My core backend development skills include PHP and Symfony for robust application development, PostgreSQL for reliable data management, RESTful API design for seamless integrations, Docker for containerization, and JSON Schema for data validation.',
-        imageUrl: 'https://picsum.photos/800/500?random=1',
         url: null,
         urlText: null
       },
