@@ -12,45 +12,58 @@ export default {
         document.getElementById(containerElementId).appendChild(renderer.domElement);
         return renderer;
     },
-    addButtons: function (scene, clickableObjects) {
+    addButtons: function (scene, clickableObjectsArray) {
         const fontLoader = new FontLoader();
         fontLoader.load(
             'https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json',
             (font) => {
+                // Create button background (simple box)
+                const buttonWidth = 3;
+                const buttonHeight = 1;
+                const buttonDepth = 0.2;
+                
+                const buttonGeometry = new THREE.BoxGeometry(buttonWidth, buttonHeight, buttonDepth);
+                const buttonMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x4CAF50
+                });
+                
+                const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
+                buttonMesh.position.set(11, 2, 30);
+                scene.add(buttonMesh);
+                
+                // Create text
                 const textGeometry = new TextGeometry('Click Me', {
                     font: font,
-                    size: 0.5,
-                    height: 0.2,
+                    size: 0.35,
+                    height: 0.05,
                     curveSegments: 12,
-                    bevelEnabled: true,
-                    bevelThickness: 0.02,
-                    bevelSize: 0.05,
-                    bevelSegments: 8
                 });
-
-                // Create a material for the text
+                
+                // Center the text
+                textGeometry.computeBoundingBox();
+                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+                
                 const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-                // Create a mesh for the text
                 const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-                textMesh.position.set(11, 2, 30);
+                
+                // Position text centered on button (in front of it)
+                textMesh.position.set(
+                    11 - textWidth / 2,
+                    2 - textHeight / 2,
+                    30 + buttonDepth / 2 + 0.05
+                );
+                
                 scene.add(textMesh);
-
-                // Add event listeners for mouse interactions
-                textMesh.addEventListener('pointerover', () => {
-                    textMesh.scale.set(1.1, 1.1, 1.1);
-                });
-                textMesh.addEventListener('pointerout', () => {
-                    textMesh.scale.set(1, 1, 1);
-                });
-                textMesh.addEventListener('click', () => {
-                    console.log('Button clicked!');
-                });
-
-                clickableObjects.push(textMesh);
+                
+                // Add to clickable objects array
+                clickableObjectsArray.push(buttonMesh);
+                
+                // Store original color for hover effects
+                buttonMesh.userData.originalColor = 0x4CAF50;
+                buttonMesh.userData.hoverColor = 0x66BB6A;
             }
         );
-
     },
     getCamera: function () {
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
