@@ -47,7 +47,15 @@ export default {
       introPlayed: false,
       ThreeMeshUI: null,
       clock: new THREE.Clock(),
+      raycaster: null,
+      mouse: null,
+      clickableObjects: [],
     }
+  },
+  beforeUnmount() {
+    // Clean up event listeners
+    window.removeEventListener('mousemove', this.onMouseMove);
+    window.removeEventListener('click', this.onMouseClick);
   },
   mounted() {
     graphicUtils.load3dMenuLibrary().then(
@@ -59,6 +67,12 @@ export default {
     this.scene = markRaw(new THREE.Scene());
     this.renderer = markRaw(graphicUtils.initRenderer(this.animate, 'container'));
     this.isWebGL2Available = WebGL.isWebGL2Available();
+
+    // important to have raycaster & mouse in order to interact with 3D buttons
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+    window.addEventListener('mousemove', this.onMouseMove);
+    window.addEventListener('click', this.onMouseClick);
     
     const audioListener = new THREE.AudioListener();
     this.camera.add(audioListener);
@@ -66,7 +80,7 @@ export default {
     // adding music
     this.soundObject = graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
 
-    graphicUtils.addButtons(this.scene);
+    graphicUtils.addButtons(this.scene, this.clickableObjects);
     
     // setting light & background color
     this.scene.background = new THREE.Color('#87CEEB');
@@ -145,7 +159,48 @@ export default {
       console.log(this.camera.position);
       console.log(this.camera.rotation);
 
-    }
+    },
+
+    onMouseMove(event) {
+      // Calculate mouse position in normalized device coordinates
+      this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      // Update raycaster
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      
+      // Check for intersections with clickable objects
+      const intersects = this.raycaster.intersectObjects(this.clickableObjects);
+      
+      // Reset all objects to normal scale
+      this.clickableObjects.forEach(obj => {
+        obj.scale.set(1, 1, 1);
+      });
+      
+      // Scale up hovered object
+      if (intersects.length > 0) {
+        intersects[0].object.scale.set(1.1, 1.1, 1.1);
+        document.body.style.cursor = 'pointer';
+      } else {
+        document.body.style.cursor = 'default';
+      }
+    },
+    
+    onMouseClick(event) {
+      // Update mouse and raycaster
+      this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      
+      // Check for intersections
+      const intersects = this.raycaster.intersectObjects(this.clickableObjects);
+      
+      if (intersects.length > 0) {
+        console.log('Button clicked!!!');
+        // Add your button click logic here
+      }
+    },    
+    
   },
 };
 </script>

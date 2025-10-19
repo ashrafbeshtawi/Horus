@@ -12,7 +12,7 @@ export default {
         document.getElementById(containerElementId).appendChild(renderer.domElement);
         return renderer;
     },
-    addButtons: function (scene) {
+    addButtons: function (scene, clickableObjects) {
         const fontLoader = new FontLoader();
         fontLoader.load(
             'https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json',
@@ -46,6 +46,8 @@ export default {
                 textMesh.addEventListener('click', () => {
                     console.log('Button clicked!');
                 });
+
+                clickableObjects.push(textMesh);
             }
         );
 
