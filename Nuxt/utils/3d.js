@@ -12,7 +12,7 @@ export default {
         document.getElementById(containerElementId).appendChild(renderer.domElement);
         return renderer;
     },
-    addButtons: function (scene, clickableObjectsArray, title, config, buttonPosition, panelPosition, panelCameraPosition, onClickCallback) {
+    addButton: function (scene, clickableObjectsArray, title, config, buttonPosition, panelPosition, panelCameraPosition, onClickCallback) {
         const fontLoader = new FontLoader();
         fontLoader.load(
             'https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json',
@@ -352,7 +352,7 @@ export default {
         gsap.to(camera.rotation, {x:-0.4, y:-0.22, z: -0.1, duration: 3})
         anim.then(
             () => {
-                gsap.to(camera.position, {x:9.6, y:1.8, z: 37, duration: 1});
+                gsap.to(camera.position, {x:12, y:2.5, z: 38, duration: 1});
                 gsap.to(camera.rotation, {x:-0.043, y:0.32, z: 0.0138, duration: 1});
             }
         )
