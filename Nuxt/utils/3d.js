@@ -17,26 +17,67 @@ export default {
         fontLoader.load(
             'https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json',
             (font) => {
-                // Create button background
-                const buttonWidth = 3;
-                const buttonHeight = 1;
-                const buttonDepth = 0.2;
+                // Button dimensions
+                const buttonWidth = 3.5;
+                const buttonHeight = 1.2;
+                const buttonDepth = 0.3;
+                const cornerRadius = 0.15;
                 
-                const buttonGeometry = new THREE.BoxGeometry(buttonWidth, buttonHeight, buttonDepth);
-                const buttonMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x4CAF50
+                // Create rounded button using RoundedBoxGeometry alternative
+                // Since THREE.Shape might not be available, we'll use a simple box with better materials
+                const buttonGeometry = new THREE.BoxGeometry(buttonWidth, buttonHeight, buttonDepth, 2, 2, 1);
+                
+                // Round the corners by modifying vertices
+                const positionAttribute = buttonGeometry.attributes.position;
+                for (let i = 0; i < positionAttribute.count; i++) {
+                    const x = positionAttribute.getX(i);
+                    const y = positionAttribute.getY(i);
+                    const z = positionAttribute.getZ(i);
+                    
+                    // Soften corners
+                    const edgeFactor = 0.9;
+                    if (Math.abs(x) > buttonWidth / 2 * 0.8 && Math.abs(y) > buttonHeight / 2 * 0.8) {
+                        positionAttribute.setX(i, x * edgeFactor);
+                        positionAttribute.setY(i, y * edgeFactor);
+                    }
+                }
+                buttonGeometry.attributes.position.needsUpdate = true;
+                buttonGeometry.computeVertexNormals();
+                
+                // Modern gradient-like material
+                const buttonMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x5C6BC0,
+                    shininess: 30,
+                    flatShading: false
                 });
                 
                 const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
                 buttonMesh.position.set(buttonPosition[0], buttonPosition[1], buttonPosition[2]);
+                buttonMesh.castShadow = true;
+                buttonMesh.receiveShadow = true;
                 scene.add(buttonMesh);
                 
-                // Create text
+                // Create shadow/depth layer
+                const shadowGeometry = new THREE.BoxGeometry(buttonWidth, buttonHeight, 0.1);
+                const shadowMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x000000,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const shadowMesh = new THREE.Mesh(shadowGeometry, shadowMaterial);
+                shadowMesh.position.set(
+                    buttonPosition[0],
+                    buttonPosition[1] - 0.08,
+                    buttonPosition[2] - 0.15
+                );
+                scene.add(shadowMesh);
+                
+                // Create text with simpler styling (no bevel initially)
                 const textGeometry = new TextGeometry(title, {
                     font: font,
-                    size: 0.35,
-                    height: 0.05,
-                    curveSegments: 12,
+                    size: 0.4,
+                    height: 0.1,
+                    curveSegments: 12
                 });
                 
                 // Center the text
@@ -44,27 +85,47 @@ export default {
                 const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
                 const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
                 
-                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const textMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF
+                });
                 const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.castShadow = true;
                 
                 // Position text centered on button
                 textMesh.position.set(
                     buttonPosition[0] - textWidth / 2,
                     buttonPosition[1] - textHeight / 2,
-                    buttonPosition[2] + buttonDepth / 2 + 0.05
+                    buttonPosition[2] + buttonDepth / 2 + 0.1
                 );
                 
                 scene.add(textMesh);
                 
-                // Store button data
-                buttonMesh.userData.originalColor = 0x4CAF50;
-                buttonMesh.userData.hoverColor = 0x66BB6A;
+                // Add subtle accent line on top
+                const accentGeometry = new THREE.BoxGeometry(buttonWidth * 0.8, 0.08, 0.08);
+                const accentMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0x7E88C3,
+                    shininess: 80
+                });
+                const accentMesh = new THREE.Mesh(accentGeometry, accentMaterial);
+                accentMesh.position.set(
+                    buttonPosition[0],
+                    buttonPosition[1] + buttonHeight / 2 - 0.15,
+                    buttonPosition[2] + buttonDepth / 2
+                );
+                scene.add(accentMesh);
+                
+                // Store button data with enhanced colors
+                buttonMesh.userData.originalColor = 0x5C6BC0;
+                buttonMesh.userData.hoverColor = 0x7986CB;
+                buttonMesh.userData.pressedColor = 0x3F51B5;
                 buttonMesh.userData.title = title;
                 buttonMesh.userData.config = config;
                 buttonMesh.userData.onClick = onClickCallback;
                 buttonMesh.userData.panelPosition = panelPosition;
                 buttonMesh.userData.panelCameraPosition = panelCameraPosition;
-
+                buttonMesh.userData.textMesh = textMesh;
+                buttonMesh.userData.shadowMesh = shadowMesh;
+                buttonMesh.userData.accentMesh = accentMesh;
                 
                 // Add to clickable objects array
                 clickableObjectsArray.push(buttonMesh);

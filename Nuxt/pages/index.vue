@@ -1,5 +1,5 @@
 <template>
-  <v-btn @click="this.debugCamera()">Show Position</v-btn>
+  <!--<v-btn @click="this.debugCamera()">Show Position</v-btn>-->
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -102,7 +102,7 @@ export default {
     this.loadWhales(this.scene)
 
     // uncomment for debugging :)
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // const controls = new OrbitControls(this.camera, this.renderer.domElement);
   },
   methods: {
     getMixersArray: function () {
