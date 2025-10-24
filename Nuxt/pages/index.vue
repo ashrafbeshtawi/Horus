@@ -33,7 +33,6 @@ import graphicUtils from '../utils/3d.js';
 import helper from '../utils/helper.js';
 import {markRaw} from 'vue'
 import gsap from "gsap";
-import { add } from 'three/examples/jsm/nodes/Nodes.js';
 
 export default {
   data() {
