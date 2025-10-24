@@ -102,7 +102,7 @@ export default {
     this.loadWhales(this.scene)
 
     // uncomment for debugging :)
-    // const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
   },
   methods: {
     getMixersArray: function () {
@@ -176,12 +176,17 @@ export default {
         y: this.camera.rotation.y,
         z: this.camera.rotation.z
       };
-      
+      console.log(buttonData.panelPosition, buttonData.panelCameraPosition);
+      for (let i = 0; i < buttonData.panelCameraPosition.length; i++) {
+        console.log(buttonData.panelCameraPosition[i]- buttonData.panelPosition[i]);
+      }
+
       // Create info panel
       this.panelObjects = graphicUtils.createInfoPanel(
         this.scene,
         buttonData.config,
         buttonData.panelPosition,
+        buttonData.panelCameraRotation,
         this.clickableObjects,
         this.handleBackButton
       );
@@ -198,9 +203,9 @@ export default {
         }
       });
       gsap.to(this.camera.rotation, {
-        x: 0,
-        y: 0,
-        z: 0,
+        x: buttonData.panelCameraRotation[0],
+        y: buttonData.panelCameraRotation[1],
+        z: buttonData.panelCameraRotation[2],
         duration: 1.5
       });
     },
@@ -232,6 +237,7 @@ export default {
         [9.3, 5, 30],
         [20, 8, 10],
         [20, 8, 24],
+        [0, 0, 0],
         this.handleButtonClick
       );
 
@@ -248,8 +254,9 @@ export default {
           urlText: null
         },
         [9.3, 3.5, 30],
-        [20, 8, 10],
-        [20, 8, 24],
+        [-21, 16, 21],
+        [-31, 21, 26],
+        [-0.7, -0.8, -0.5],
         this.handleButtonClick
       );
 
@@ -266,8 +273,9 @@ export default {
           urlText: null
         },
         [9.3, 2, 30],
-        [20, 8, 10],
-        [20, 8, 24],
+        [-21, 16, 21],
+        [-31, 21, 26],
+        [-0.7, -0.8, -0.5],
         this.handleButtonClick
       );
 
@@ -284,82 +292,12 @@ export default {
           urlText: 'View Project'
         },
         [9.3, 0.5, 30],
-        [20, 8, 10],
-        [20, 8, 24],
+        [-21, 16, 21],
+        [-31, 21, 26],
+        [-0.7, -0.8, -0.5],
         this.handleButtonClick
       );
 
-      // Projects Section - Auto-Trader
-      graphicUtils.addButton(
-        this.scene, 
-        this.clickableObjects,
-        'Auto-Trader',
-        {
-          title: 'Auto-Trader',
-          text: 'A sophisticated Bitcoin trading evolution simulator. This project simulates different trading strategies and market conditions to optimize trading performance over time.',
-          imageUrl: 'https://picsum.photos/800/500?random=4',
-          url: 'https://github.com/ashrafbeshtawi/Auto-Trader',
-          urlText: 'View Project'
-        },
-        [13, 1, 30],
-        [20, 8, 10],
-        [20, 8, 24],
-        this.handleButtonClick
-      );
-
-      // Projects Section - Landlord
-      graphicUtils.addButton(
-        this.scene, 
-        this.clickableObjects,
-        'Landlord',
-        {
-          title: 'Landlord',
-          text: 'An innovative crypto token with a built-in profit distribution mechanism. This project explores the use of smart contracts to automate profit sharing among token holders.',
-          imageUrl: 'https://picsum.photos/800/500?random=5',
-          url: 'https://github.com/ashrafbeshtawi/Landlord',
-          urlText: 'View Project'
-        },
-        [16.7, 1, 30],
-        [20, 8, 10],
-        [20, 8, 24],
-        this.handleButtonClick
-      );
-
-      // About Section
-      graphicUtils.addButton(
-        this.scene, 
-        this.clickableObjects,
-        'About Me',
-        {
-          title: 'About Me',
-          text: 'I am a passionate backend developer with a strong interest in AI and Crypto. Based in the vibrant city of Berlin, I focus on crafting robust and scalable systems while continuously exploring the exciting frontiers of technology.',
-          imageUrl: 'https://picsum.photos/128/128',
-          url: null,
-          urlText: null
-        },
-        [11, 3.5, 30],
-        [20, 8, 10],
-        [20, 8, 24],
-        this.handleButtonClick
-      );
-
-      // Contact Section
-      graphicUtils.addButton(
-        this.scene, 
-        this.clickableObjects,
-        'Contact',
-        {
-          title: 'Get In Touch',
-          text: 'Feel free to reach out to me via email or connect with me on LinkedIn. I am always open to discussing new projects, creative ideas, or opportunities to be part of your visions.',
-          imageUrl: null,
-          url: 'https://www.linkedin.com/in/ashraf-beshtawi-1308a11a8/',
-          urlText: 'LinkedIn'
-        },
-        [14, 3.5, 30],
-        [20, 8, 10],
-        [20, 8, 24],
-        this.handleButtonClick
-      );
     },
     
     fadeOutPanel(callback) {
