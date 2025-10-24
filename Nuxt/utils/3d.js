@@ -41,9 +41,9 @@ export default {
           buttonWidth,
           buttonHeight,
           buttonDepth,
-          2,
-          2,
-          1
+          4,
+          4,
+          2
         );
 
         // Round the corners by modifying vertices
@@ -67,10 +67,12 @@ export default {
         buttonGeometry.computeVertexNormals();
 
         // Modern gradient-like material
-        const buttonMaterial = new THREE.MeshPhongMaterial({
+        const buttonMaterial = new THREE.MeshStandardMaterial({
           color: 0x5c6bc0,
-          shininess: 30,
-          flatShading: false,
+          metalness: 0.3,
+          roughness: 0.4,
+          emissive: 0x1a237e,
+          emissiveIntensity: 0.1,
         });
 
         const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
@@ -106,8 +108,12 @@ export default {
         const textGeometry = new TextGeometry(title, {
           font: font,
           size: 0.4,
-          height: 0.1,
+          height: 0.05,  // Increased from 0.1
           curveSegments: 12,
+          bevelEnabled: true,
+          bevelThickness: 0.02,
+          bevelSize: 0.01,
+          bevelSegments: 3,
         });
 
         // Center the text
@@ -117,8 +123,10 @@ export default {
         const textHeight =
           textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
 
-        const textMaterial = new THREE.MeshBasicMaterial({
+        const textMaterial = new THREE.MeshStandardMaterial({
           color: 0xffffff,
+          metalness: 0.2,
+          roughness: 0.5,
         });
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
         textMesh.castShadow = true;

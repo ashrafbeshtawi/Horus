@@ -1,5 +1,5 @@
 <template>
-  <!--<v-btn @click="this.debugCamera()">Show Position</v-btn>-->
+  <v-btn @click="this.debugCamera()">Show Position</v-btn>
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -88,8 +88,12 @@ export default {
     this.addButtons();
     // setting light & background color
     this.scene.background = new THREE.Color('#87CEEB');
-    const light = new THREE.AmbientLight(0xffffff, 6);
-    this.scene.add(light);
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 3);
+    this.scene.add(hemisphereLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+    directionalLight.position.set(7, 17, 53);
+    this.scene.add(directionalLight);
 
     // loading modells
     graphicUtils.loadModell(
@@ -362,6 +366,7 @@ export default {
     },
     
   },
+  
 };
 </script>
 
