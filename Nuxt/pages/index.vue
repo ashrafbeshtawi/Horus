@@ -55,6 +55,13 @@ export default {
       previousCameraPosition: null,
       previousCameraRotation: null,
       panelObjects: null,
+      // handshake effect
+      cameraRotationInLastAnimationFrame: null,
+      cameraStartShakeEffectPosition: null,
+      handshakeEffectMovementDirection: 1,
+      handshakeEffectMovementStep: 0.003,
+      handshakeMaxMovementPercentage: 0.05,
+
     }
   },
   beforeUnmount() {
@@ -136,6 +143,7 @@ export default {
       this.animationStarted = true;
       this.soundObject.context.resume();
     },
+
     animate: function() {
       if (!this.animationStarted) {
         return;
@@ -161,6 +169,58 @@ export default {
         this.introPlayed = true;
         graphicUtils.moveToStartingPoint(this.camera);
       }
+
+      // Handshake effect implementation
+      // Initialize cameraRotationInLastAnimationFrame on first run
+      if (this.cameraRotationInLastAnimationFrame === null) {
+        this.cameraRotationInLastAnimationFrame = {
+          x: this.camera.rotation.x,
+          y: this.camera.rotation.y,
+          z: this.camera.rotation.z
+        };
+      }
+
+      // Check if camera rotation hasn't changed (camera is not rotating)
+      const rotationThreshold = 0.0001; // Small threshold for floating point comparison
+      const rotationUnchanged = 
+        Math.abs(this.camera.rotation.x - this.cameraRotationInLastAnimationFrame.x) < rotationThreshold &&
+        Math.abs(this.camera.rotation.y - this.cameraRotationInLastAnimationFrame.y) < rotationThreshold &&
+        Math.abs(this.camera.rotation.z - this.cameraRotationInLastAnimationFrame.z) < rotationThreshold;
+
+      if (rotationUnchanged) {
+        // Camera is not rotating, start shake effect
+        
+        // Initialize start position if not set
+        if (this.cameraStartShakeEffectPosition === null) {
+          this.cameraStartShakeEffectPosition = this.camera.position.y;
+        }
+
+        // Calculate movement amount
+        const movementAmount = this.handshakeEffectMovementDirection * this.handshakeEffectMovementStep;
+        
+        // Apply movement to camera
+        this.camera.position.y += movementAmount;
+
+        // Calculate how far we've moved from start position
+        const distanceFromStart = Math.abs(this.camera.position.y - this.cameraStartShakeEffectPosition);
+        const maxDistance = Math.abs(this.cameraStartShakeEffectPosition * this.handshakeMaxMovementPercentage);
+
+        // Check if we've reached the maximum movement distance
+        if (distanceFromStart >= maxDistance) {
+          // Reverse direction
+          this.handshakeEffectMovementDirection *= -1;
+        }
+      } else {
+        // Camera is rotating, reset shake effect
+        this.cameraStartShakeEffectPosition = null;
+      }
+
+      // Update last frame rotation
+      this.cameraRotationInLastAnimationFrame = {
+        x: this.camera.rotation.x,
+        y: this.camera.rotation.y,
+        z: this.camera.rotation.z
+      };
     },
     debugCamera: function () {
       console.log(this.camera.position);
