@@ -195,7 +195,7 @@ export default {
     // Create main panel background
     const panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
     const panelMaterial = new THREE.MeshBasicMaterial({
-      color: 0xf5f5f5,
+      color: 0xffffff,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,
@@ -245,7 +245,7 @@ export default {
         const titleMesh = new THREE.Mesh(titleGeometry, titleMaterial);
         let titlePosition = new THREE.Vector3(
           -0.5 * titleWidth,
-          panelHeight * 0.44,
+          panelHeight * 0.40,
           0.25
         );
         titlePosition = panel.localToWorld(titlePosition);
@@ -529,12 +529,12 @@ export default {
   },
   moveToStartingPoint: function (camera) {
     let anim = gsap.to(camera.position, {
-      x: -13,
-      y: 24,
-      z: 53,
+      x: 21,
+      y: 20,
+      z: 71,
       duration: 3,
     });
-    gsap.to(camera.rotation, { x: -0.4, y: -0.22, z: -0.1, duration: 3 });
+    gsap.to(camera.rotation, { x: -0.28, y: 0.27, z: 0.07, duration: 3 });
     anim.then(() => {
       gsap.to(camera.position, { x: 12, y: 2.5, z: 38, duration: 3 });
       gsap.to(camera.rotation, {
