@@ -1,5 +1,5 @@
 <template>
-  <v-btn @click="this.debugCamera()">Show Position</v-btn>
+  <!--<v-btn @click="this.debugCamera()">Show Position</v-btn>-->
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -350,7 +350,7 @@ export default {
       });
     },
     
-    
+
     onMouseClick(event) {
       this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;

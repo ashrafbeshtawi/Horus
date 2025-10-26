@@ -27,13 +27,12 @@ export default {
   ) {
     const fontLoader = new FontLoader();
     fontLoader.load(
-      "https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json",
+      "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
       (font) => {
         // Button dimensions
         const buttonWidth = 3.5;
         const buttonHeight = 1.2;
         const buttonDepth = 0.3;
-        const cornerRadius = 0.15;
 
         // Create rounded button using RoundedBoxGeometry alternative
         // Since THREE.Shape might not be available, we'll use a simple box with better materials
@@ -84,25 +83,19 @@ export default {
         buttonMesh.castShadow = true;
         buttonMesh.receiveShadow = true;
         scene.add(buttonMesh);
-
-        // Create shadow/depth layer
-        const shadowGeometry = new THREE.BoxGeometry(
-          buttonWidth,
-          buttonHeight,
-          0.1
-        );
-        const shadowMaterial = new THREE.MeshBasicMaterial({
-          color: 0x000000,
-          transparent: true,
-          opacity: 0.2,
+        // Add outline to button
+        const edgesGeometry = new THREE.EdgesGeometry(buttonGeometry);
+        const edgesMaterial = new THREE.LineBasicMaterial({
+          color: 0x3f51b5,
+          linewidth: 2
         });
-        const shadowMesh = new THREE.Mesh(shadowGeometry, shadowMaterial);
-        shadowMesh.position.set(
+        const buttonOutline = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+        buttonOutline.position.set(
           buttonPosition[0],
-          buttonPosition[1] - 0.08,
-          buttonPosition[2] - 0.15
+          buttonPosition[1],
+          buttonPosition[2]
         );
-        scene.add(shadowMesh);
+        scene.add(buttonOutline);
 
         // Create text with simpler styling (no bevel initially)
         const textGeometry = new TextGeometry(title, {
@@ -140,23 +133,6 @@ export default {
 
         scene.add(textMesh);
 
-        // Add subtle accent line on top
-        const accentGeometry = new THREE.BoxGeometry(
-          buttonWidth * 0.8,
-          0.08,
-          0.08
-        );
-        const accentMaterial = new THREE.MeshPhongMaterial({
-          color: 0x7e88c3,
-          shininess: 80,
-        });
-        const accentMesh = new THREE.Mesh(accentGeometry, accentMaterial);
-        accentMesh.position.set(
-          buttonPosition[0],
-          buttonPosition[1] + buttonHeight / 2 - 0.15,
-          buttonPosition[2] + buttonDepth / 2
-        );
-        scene.add(accentMesh);
 
         // Store button data with enhanced colors
         buttonMesh.userData.originalColor = 0x5c6bc0;
@@ -169,8 +145,6 @@ export default {
         buttonMesh.userData.panelCameraPosition = panelCameraPosition;
         buttonMesh.userData.panelCameraRotation = panelCameraRotation;
         buttonMesh.userData.textMesh = textMesh;
-        buttonMesh.userData.shadowMesh = shadowMesh;
-        buttonMesh.userData.accentMesh = accentMesh;
 
         // Add to clickable objects array
         clickableObjectsArray.push(buttonMesh);
@@ -248,7 +222,7 @@ export default {
 
     const fontLoader = new FontLoader();
     fontLoader.load(
-      "https://unpkg.com/three@0.142.0/examples/fonts/helvetiker_regular.typeface.json",
+      "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
       (font) => {
         let currentY = panelHeight / 2 - 1;
 
@@ -272,7 +246,7 @@ export default {
         let titlePosition = new THREE.Vector3(
           -0.5 * titleWidth,
           panelHeight * 0.44,
-          0.1
+          0.25
         );
         titlePosition = panel.localToWorld(titlePosition);
 
@@ -356,7 +330,7 @@ export default {
             let textPosition = new THREE.Vector3(
               textWidth * -0.5,
               currentY - index * lineHeight,
-              0.1
+              0.25
             );
             textPosition = panel.localToWorld(textPosition);
 
@@ -558,16 +532,16 @@ export default {
       x: -13,
       y: 24,
       z: 53,
-      duration: 0.5,
+      duration: 3,
     });
-    gsap.to(camera.rotation, { x: -0.4, y: -0.22, z: -0.1, duration: 0.5 });
+    gsap.to(camera.rotation, { x: -0.4, y: -0.22, z: -0.1, duration: 3 });
     anim.then(() => {
-      gsap.to(camera.position, { x: 12, y: 2.5, z: 38, duration: 0.5 });
+      gsap.to(camera.position, { x: 12, y: 2.5, z: 38, duration: 3 });
       gsap.to(camera.rotation, {
         x: -0.043,
         y: 0.32,
         z: 0.0138,
-        duration: 0.5,
+        duration: 3,
       });
     });
   },
