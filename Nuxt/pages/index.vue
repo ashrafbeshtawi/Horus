@@ -226,83 +226,124 @@ export default {
     },
     addButtons() {
 
-      // Skills Section - Backend Toolkit
+      // Who am I?
       graphicUtils.addButton(
-        this.scene, 
+        this.scene,
         this.clickableObjects,
-        'Backend',
+        'Who am I?',
         {
-          title: 'Backend Toolkit',
-          text: 'My core backend development skills include PHP and Symfony for robust application development, PostgreSQL for reliable data management, RESTful API design for seamless integrations, Docker for containerization, and JSON Schema for data validation.',
-          url: null,
-          urlText: null
+          title: 'Who am I?',
+          text: 'I am Ashraf — a Backend & AI engineer passionate about building smart, scalable applications.',
+          urls: []
         },
-        [9.3, 5, 30],
-        [20, 8, 10],
-        [20, 8, 24],
+        [9.3, 9, 30],
+        [15, 10, 12],
+        [20, 10, 22],
         [0, 0, 0],
         this.handleButtonClick
       );
 
-      // Skills Section - AI & Crypto
+      // Frontend
       graphicUtils.addButton(
-        this.scene, 
+        this.scene,
         this.clickableObjects,
-        'AI & Crypto',
+        'Frontend',
         {
-          title: 'AI & Crypto Adventures',
-          text: 'Exploring the cutting edge of technology through Python for AI development, Solidity for smart contract programming, and Next.js for modern web applications. I am passionate about building intelligent systems and blockchain solutions.',
-          imageUrl: 'https://picsum.photos/800/500?random=2',
-          url: null,
-          urlText: null
+          title: 'Frontend & 3D Experiences',
+          text: 'Next.js, Nuxt.js & Three.js — immersive and performant web apps.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus (3D Portfolio)' },
+            { url: 'https://mocking-bird-three.vercel.app/', title: 'Mocking-Bird (Fullstack App)' }
+          ]
         },
-        [9.3, 3.5, 30],
-        [-21, 16, 21],
-        [-31, 21, 26],
-        [-0.7, -0.8, -0.5],
+        [9.3, 7.5, 30],
+        [-15, 16, 21],
+        [-25, 22, 26],
+        [0, 0, 0],
         this.handleButtonClick
       );
 
-      // Skills Section - Languages
+      // Backend
       graphicUtils.addButton(
-        this.scene, 
+        this.scene,
         this.clickableObjects,
-        'Languages',
+        'Backend',
         {
-          title: 'Languages I Speak',
-          text: 'Communication is key, and I am fortunate to be fluent in German, English, and Arabic. This allows me to connect and collaborate effectively across diverse environments and cultures.',
-          imageUrl: null,
-          url: null,
-          urlText: null
+          title: 'Backend Engineering',
+          text: 'Symfony · PHP 8 · PostgreSQL · PHPUnit — reliable APIs & scalable backend systems.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub Backend Repos' }
+          ]
         },
-        [9.3, 2, 30],
-        [-21, 16, 21],
-        [-31, 21, 26],
-        [-0.7, -0.8, -0.5],
+        [9.3, 6, 30],
+        [15, 14, 20],
+        [20, 19, 25],
+        [0, 0, 0],
         this.handleButtonClick
       );
 
-      // Projects Section - AmygdalaGPT
+      // Web3
       graphicUtils.addButton(
-        this.scene, 
+        this.scene,
         this.clickableObjects,
-        'AmygdalaGPT',
+        'Web3',
         {
-          title: 'AmygdalaGPT',
-          text: 'A memory-augmented LLM system that enhances the natural language processing capabilities of large language models by integrating an external memory module. This project aims to make LLMs more dynamic and context-aware.',
-          imageUrl: 'https://picsum.photos/800/500?random=3',
-          url: 'https://github.com/ashrafbeshtawi/AmygdalaGPT',
-          urlText: 'View Project'
+          title: 'Web3 & Real Estate Tokenization',
+          text: 'LandLord — fractional investment in real estate using blockchain.',
+          urls: [
+            { url: 'https://landlord-liart.vercel.app/', title: 'LandLord (Web3 Project)' }
+          ]
         },
-        [9.3, 0.5, 30],
-        [-21, 16, 21],
-        [-31, 21, 26],
-        [-0.7, -0.8, -0.5],
+        [9.3, 4.5, 30],
+        [-10, 13, 18],
+        [-20, 18, 24],
+        [0, 0, 0],
+        this.handleButtonClick
+      );
+
+      // AI
+      graphicUtils.addButton(
+        this.scene,
+        this.clickableObjects,
+        'AI',
+        {
+          title: 'AI & Automation',
+          text: 'Genetic Algorithms + n8n Workflows — intelligent automation & algorithmic trading.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi/Auto-Trader', title: 'Auto-Trader (AI Trading)' }
+          ]
+        },
+        [9.3, 3, 30],
+        [-18, 11, 18],
+        [-28, 16, 22],
+        [0, 0, 0],
+        this.handleButtonClick
+      );
+
+      // Let’s Connect
+      graphicUtils.addButton(
+        this.scene,
+        this.clickableObjects,
+        'Let’s Connect',
+        {
+          title: 'Let’s Connect 🤝',
+          text: 'Open to Backend & AI roles — feel free to reach out!',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub' },
+            { url: 'https://www.linkedin.com/in/ashraf-beshtawi/', title: 'LinkedIn' }
+          ]
+        },
+        [9.3, 1.5, 30],
+        [0, 10, 15],
+        [0, 15, 20],
+        [0, 0, 0],
         this.handleButtonClick
       );
 
     },
-    
+
+
+
     fadeOutPanel(callback) {
       if (!this.panelObjects || !this.panelObjects.objectsToAnimate) return;
       

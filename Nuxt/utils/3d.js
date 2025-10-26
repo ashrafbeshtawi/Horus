@@ -185,6 +185,7 @@ export default {
     clickableObjectsArray,
     onBackCallback
   ) {
+    // config.urls should be an array of {title, url} objects
     const panelGroup = new THREE.Group();
     const objectsToAnimate = [];
 
@@ -347,90 +348,113 @@ export default {
           currentY -= lines.length * lineHeight + 0.5;
         }
 
-        // URL Button if provided
-        if (config.url) {
+        // URL Buttons if provided (array of {title, url} objects)
+        if (config.urls && Array.isArray(config.urls)) {
           const urlButtonWidth = 4;
           const urlButtonHeight = 0.8;
+          const buttonSpacing = 0.3;
 
-          const urlButtonGeometry = new THREE.BoxGeometry(
-            urlButtonWidth,
-            urlButtonHeight,
-            0.2
-          );
-          const urlButtonMaterial = new THREE.MeshBasicMaterial({
-            color: 0x2196f3,
-            transparent: true,
-            opacity: 0,
+          config.urls.forEach((urlObj) => {
+            console.log(urlObj);
+
+            const urlButtonGeometry = new THREE.BoxGeometry(
+              urlButtonWidth,
+              urlButtonHeight,
+              0.2
+            );
+            const urlButtonMaterial = new THREE.MeshBasicMaterial({
+              color: 0x2196f3,
+              transparent: true,
+              opacity: 0,
+            });
+            const urlButton = new THREE.Mesh(
+              urlButtonGeometry,
+              urlButtonMaterial
+            );
+
+            let urlButtonPosition = new THREE.Vector3(
+              0,
+              currentY,
+              0.1
+            );
+            urlButtonPosition = panel.localToWorld(urlButtonPosition);
+
+            urlButton.position.set(
+              urlButtonPosition.x,
+              urlButtonPosition.y,
+              urlButtonPosition.z
+            );
+            urlButton.rotation.copy(panel.rotation);
+            panelGroup.add(urlButton);
+            objectsToAnimate.push(urlButton);
+
+            // Add button outline
+            const urlButtonEdges = new THREE.EdgesGeometry(urlButtonGeometry);
+            const urlButtonOutlineMaterial = new THREE.LineBasicMaterial({
+              color: 0x1976d2,
+              transparent: true,
+              opacity: 0,
+            });
+            const urlButtonOutline = new THREE.LineSegments(
+              urlButtonEdges,
+              urlButtonOutlineMaterial
+            );
+            urlButtonOutline.position.copy(urlButton.position);
+            urlButtonOutline.rotation.copy(urlButton.rotation);
+            panelGroup.add(urlButtonOutline);
+            objectsToAnimate.push(urlButtonOutline);
+            //console.log(urlObj);
+            const urlTextGeometry = new TextGeometry(urlObj.title, {
+              font: font,
+              size: 0.3,
+              height: 0.02,
+              curveSegments: 12,
+            });
+            urlTextGeometry.computeBoundingBox();
+            const urlTextWidth =
+              urlTextGeometry.boundingBox.max.x -
+              urlTextGeometry.boundingBox.min.x;
+            const urlTextHeight =
+              urlTextGeometry.boundingBox.max.y -
+              urlTextGeometry.boundingBox.min.y;
+
+            const urlTextMaterial = new THREE.MeshBasicMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0,
+            });
+            const urlTextMesh = new THREE.Mesh(urlTextGeometry, urlTextMaterial);
+
+            let urlTextPosition = new THREE.Vector3(
+              -urlTextWidth / 2,
+              currentY - urlTextHeight / 2,
+              0.25
+            );
+            urlTextPosition = panel.localToWorld(urlTextPosition);
+
+            urlTextMesh.position.set(
+              urlTextPosition.x,
+              urlTextPosition.y,
+              urlTextPosition.z
+            );
+            urlTextMesh.rotation.copy(panel.rotation);
+            panelGroup.add(urlTextMesh);
+            objectsToAnimate.push(urlTextMesh);
+
+            urlButton.userData.originalColor = 0x2196f3;
+            urlButton.userData.hoverColor = 0x42a5f5;
+            urlButton.userData.url = urlObj.url;
+            urlButton.userData.onClick = () => {
+              window.open(urlObj.url, "_blank");
+            };
+            urlButton.userData.textMesh = urlTextMesh;
+            urlButton.userData.outline = urlButtonOutline;
+            clickableObjectsArray.push(urlButton);
+
+            currentY -= urlButtonHeight + buttonSpacing;
           });
-          const urlButton = new THREE.Mesh(
-            urlButtonGeometry,
-            urlButtonMaterial
-          );
 
-          let urlButtonPosition = new THREE.Vector3(
-            0,
-            currentY,
-            0.1
-          );
-          urlButtonPosition = panel.localToWorld(urlButtonPosition);
-
-          urlButton.position.set(
-            urlButtonPosition.x,
-            urlButtonPosition.y,
-            urlButtonPosition.z
-          );
-          urlButton.rotation.copy(panel.rotation);
-          panelGroup.add(urlButton);
-          objectsToAnimate.push(urlButton);
-
-          const urlText = config.urlText || "View More";
-          const urlTextGeometry = new TextGeometry(urlText, {
-            font: font,
-            size: 0.3,
-            height: 0.02,
-            curveSegments: 12,
-          });
-          urlTextGeometry.computeBoundingBox();
-          const urlTextWidth =
-            urlTextGeometry.boundingBox.max.x -
-            urlTextGeometry.boundingBox.min.x;
-          const urlTextHeight =
-            urlTextGeometry.boundingBox.max.y -
-            urlTextGeometry.boundingBox.min.y;
-
-          const urlTextMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0,
-          });
-          const urlTextMesh = new THREE.Mesh(urlTextGeometry, urlTextMaterial);
-
-          let urlTextPosition = new THREE.Vector3(
-            -urlTextWidth / 2,
-            currentY - urlTextHeight / 2,
-            0.25
-          );
-          urlTextPosition = panel.localToWorld(urlTextPosition);
-
-          urlTextMesh.position.set(
-            urlTextPosition.x,
-            urlTextPosition.y,
-            urlTextPosition.z
-          );
-          urlTextMesh.rotation.copy(panel.rotation);
-          panelGroup.add(urlTextMesh);
-          objectsToAnimate.push(urlTextMesh);
-
-          urlButton.userData.originalColor = 0x2196f3;
-          urlButton.userData.hoverColor = 0x42a5f5;
-          urlButton.userData.url = config.url;
-          urlButton.userData.onClick = () => {
-            window.open(config.url, "_blank");
-          };
-          urlButton.userData.textMesh = urlTextMesh;
-          clickableObjectsArray.push(urlButton);
-
-          currentY -= 1.2;
+          currentY -= 0.4;
         }
 
         // X Close button (upper left corner)
@@ -465,6 +489,22 @@ export default {
         closeButton.rotation.copy(panel.rotation);
         panelGroup.add(closeButton);
         objectsToAnimate.push(closeButton);
+
+        // Add close button outline
+        const closeButtonEdges = new THREE.EdgesGeometry(closeButtonGeometry);
+        const closeButtonOutlineMaterial = new THREE.LineBasicMaterial({
+          color: 0xd32f2f,
+          transparent: true,
+          opacity: 0,
+        });
+        const closeButtonOutline = new THREE.LineSegments(
+          closeButtonEdges,
+          closeButtonOutlineMaterial
+        );
+        closeButtonOutline.position.copy(closeButton.position);
+        closeButtonOutline.rotation.copy(closeButton.rotation);
+        panelGroup.add(closeButtonOutline);
+        objectsToAnimate.push(closeButtonOutline);
 
         const closeTextGeometry = new TextGeometry("X", {
           font: font,
@@ -508,6 +548,7 @@ export default {
         closeButton.userData.hoverColor = 0xff7676;
         closeButton.userData.onClick = onBackCallback;
         closeButton.userData.textMesh = closeTextMesh;
+        closeButton.userData.outline = closeButtonOutline;
         closeButton.userData.panelGroup = panelGroup;
         closeButton.userData.objectsToAnimate = objectsToAnimate;
         clickableObjectsArray.push(closeButton);
@@ -536,11 +577,11 @@ export default {
     });
     gsap.to(camera.rotation, { x: -0.28, y: 0.27, z: 0.07, duration: 3 });
     anim.then(() => {
-      gsap.to(camera.position, { x: 12, y: 2.5, z: 38, duration: 3 });
+      gsap.to(camera.position, { x: 11, y: 6, z: 38, duration: 3 });
       gsap.to(camera.rotation, {
-        x: -0.043,
-        y: 0.32,
-        z: 0.0138,
+        x: -0.15,
+        y: 0.28,
+        z: 0.04,
         duration: 3,
       });
     });
