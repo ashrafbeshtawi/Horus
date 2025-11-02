@@ -1,5 +1,5 @@
 <template>
-  <v-btn @click="this.debugCamera()">Show Position</v-btn>
+  <!--<v-btn @click="this.debugCamera()">Show Position</v-btn>-->
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -112,7 +112,7 @@ export default {
     this.loadWhales(this.scene)
 
     // uncomment for debugging :)
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
   },
   methods: {
     getMixersArray: function () {
@@ -297,7 +297,7 @@ export default {
           urls: []
         },
         [9.3, 9, 30],
-        [15, 10, 12],
+        [20, 10, 12],
         [20, 10, 22],
         [0, 0, 0],
         this.handleButtonClick
@@ -317,8 +317,8 @@ export default {
           ]
         },
         [9.3, 7.5, 30],
-        [-15, 16, 21],
-        [-25, 22, 26],
+        [-25, 16, 16],
+        [-25, 16, 26],
         [0, 0, 0],
         this.handleButtonClick
       );
@@ -336,9 +336,9 @@ export default {
           ]
         },
         [9.3, 6, 30],
-        [15, 14, 20],
-        [20, 19, 25],
-        [0, 0, 0],
+        [13, 11, -13],
+        [19, 15.5, -18],
+        [-2.4, 0.6, 2.6],
         this.handleButtonClick
       );
 
@@ -355,9 +355,9 @@ export default {
           ]
         },
         [9.3, 4.5, 30],
-        [-10, 13, 18],
-        [-20, 18, 24],
-        [0, 0, 0],
+        [-26, 5, 6],
+        [-39, 6.5, 4.7],
+        [-1, -1.3, -1],
         this.handleButtonClick
       );
 
@@ -374,9 +374,9 @@ export default {
           ]
         },
         [9.3, 3, 30],
-        [-18, 11, 18],
-        [-28, 16, 22],
-        [0, 0, 0],
+        [-32, 2.4, 33],
+        [-39, 3, 40],
+        [-0.07, -0.7, 0],
         this.handleButtonClick
       );
 
@@ -394,9 +394,9 @@ export default {
           ]
         },
         [9.3, 1.5, 30],
-        [0, 10, 15],
-        [0, 15, 20],
-        [0, 0, 0],
+        [-8, 6, -32],
+        [-8, 6, -42],
+        [-3, 0, -3],
         this.handleButtonClick
       );
 
