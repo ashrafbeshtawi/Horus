@@ -292,7 +292,7 @@ export default {
         'Who am I?',
         {
           title: 'Ashraf Beshtawi',
-          text: 'I am Ashraf — a Backend & AI engineer passionate about building smart, scalable applications.',
+          text: 'I’m Ashraf — a 29-year-old Senior Backend & AI Engineer based in Berlin, father, and passionate programmer with 5+ years experience in PHP, Symfony, SQL, MongoDB, and modern frontend frameworks like Next.js & Nuxt.js — building scalable systems, AI automation, and Web3 apps.',
           urls: [
             { url: '/pdf/Ashraf Beshtawi- CV.pdf', title: 'View my CV' },
           ],

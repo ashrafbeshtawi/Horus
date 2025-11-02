@@ -289,7 +289,7 @@ export default {
         if (hasImage) {
           // Reserve space for image on the left
           textStartX = -panelWidth / 2 + imageWidth + 2 * padding;
-          textMaxWidth = (panelWidth - 3 * padding - imageWidth);
+          textMaxWidth = (panelWidth - 5 * padding - imageWidth);
         }
 
         // Description text (wrapped) - positioned on the right or full width
