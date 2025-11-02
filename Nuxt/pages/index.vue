@@ -285,16 +285,18 @@ export default {
       });
     },
     addButtons() {
-
       // Who am I?
       graphicUtils.addButton(
         this.scene,
         this.clickableObjects,
         'Who am I?',
         {
-          title: 'Who am I?',
+          title: 'Ashraf Beshtawi',
           text: 'I am Ashraf — a Backend & AI engineer passionate about building smart, scalable applications.',
-          urls: []
+          urls: [
+            { url: '/pdf/Ashraf Beshtawi- CV.pdf', title: 'View my CV' },
+          ],
+          imageUrl : '/img/me.jpeg'
         },
         [9.3, 9, 30],
         [20, 10, 12],
@@ -386,7 +388,7 @@ export default {
         this.clickableObjects,
         'Let’s Connect',
         {
-          title: 'Let’s Connect 🤝',
+          title: 'Let’s Connect',
           text: 'Open to Backend & AI roles — feel free to reach out!',
           urls: [
             { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub' },

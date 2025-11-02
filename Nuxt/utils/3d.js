@@ -239,7 +239,7 @@ export default {
           titleGeometry.boundingBox.max.x - titleGeometry.boundingBox.min.x;
 
         const titleMaterial = new THREE.MeshBasicMaterial({
-          color: 0x333333,
+          color: 0x2196f3,
           transparent: true,
           opacity: 0,
         });
@@ -260,6 +260,20 @@ export default {
         panelGroup.add(titleMesh);
         objectsToAnimate.push(titleMesh);
 
+        // underline
+        const underlineGeometry = new THREE.PlaneGeometry(panelWidth * 0.7, 0.05);
+        const underlineMaterial = new THREE.MeshBasicMaterial({
+          color: 0x2196f3,
+          transparent: true,
+          opacity: 0,
+        });
+        const underline = new THREE.Mesh(underlineGeometry, underlineMaterial);
+        const underlinePos = panel.localToWorld(new THREE.Vector3(0, panelHeight * 0.39, 0.25));
+        underline.position.copy(underlinePos);
+        underline.rotation.copy(panel.rotation);
+        panelGroup.add(underline);
+        objectsToAnimate.push(underline);
+
         currentY -= 1.5;
 
         // Image if provided
@@ -268,7 +282,7 @@ export default {
           textureLoader.load(
             config.imageUrl,
             (texture) => {
-              const imageWidth = 10;
+              const imageWidth = 6.5;
               const imageHeight = 6.5;
               const imageGeometry = new THREE.PlaneGeometry(
                 imageWidth,
@@ -284,7 +298,7 @@ export default {
               let imagePosition = new THREE.Vector3(
                 0,
                 0.1 * panelHeight,
-                0.1
+                0.3
               );
               imagePosition = panel.localToWorld(imagePosition);
 
