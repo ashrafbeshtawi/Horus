@@ -274,16 +274,76 @@ export default {
         panelGroup.add(underline);
         objectsToAnimate.push(underline);
 
-        currentY -= 1.5;
+        currentY = panelHeight * 0.3;
 
-        // Image if provided
-        if (config.imageUrl) {
+        // Determine layout: side by side if image exists, full width text otherwise
+        const hasImage = !!config.imageUrl;
+        const imageWidth = 6;
+        const imageHeight = 6;
+        const contentStartY = currentY;
+        const padding = 0.5;
+
+        let textStartX = -panelWidth / 2 + padding;
+        let textMaxWidth = panelWidth - 2 * padding;
+
+        if (hasImage) {
+          // Reserve space for image on the left
+          textStartX = -panelWidth / 2 + imageWidth + 2 * padding;
+          textMaxWidth = (panelWidth - 3 * padding - imageWidth);
+        }
+
+        // Description text (wrapped) - positioned on the right or full width
+        let textEndY = contentStartY;
+        if (config.text) {
+          const lines = this.wrapText(config.text, textMaxWidth, 0.3);
+          const lineHeight = 0.5;
+          const textHeight = 0.3;
+
+          lines.forEach((line, index) => {
+            const textGeometry = new TextGeometry(line, {
+              font: font,
+              size: 0.3,
+              height: 0.02,
+              curveSegments: 12,
+            });
+            textGeometry.computeBoundingBox();
+            const textWidth =
+              textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+
+            const textMaterial = new THREE.MeshBasicMaterial({
+              color: 0x555555,
+              transparent: true,
+              opacity: 0,
+            });
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+            let textPosition = new THREE.Vector3(
+              textStartX,
+              contentStartY - textHeight / 2 - index * lineHeight,
+              0.25
+            );
+            textPosition = panel.localToWorld(textPosition);
+
+            textMesh.position.set(
+              textPosition.x,
+              textPosition.y,
+              textPosition.z
+            );
+            textMesh.rotation.copy(panel.rotation);
+            panelGroup.add(textMesh);
+            objectsToAnimate.push(textMesh);
+          });
+
+          textEndY = contentStartY - textHeight / 2 - lines.length * lineHeight;
+        }
+
+        // Image if provided - positioned on the left, side by side with text
+        let imageEndY = contentStartY;
+        if (hasImage) {
           const textureLoader = new THREE.TextureLoader();
           textureLoader.load(
             config.imageUrl,
             (texture) => {
-              const imageWidth = 6.5;
-              const imageHeight = 6.5;
               const imageGeometry = new THREE.PlaneGeometry(
                 imageWidth,
                 imageHeight
@@ -296,8 +356,8 @@ export default {
               const imageMesh = new THREE.Mesh(imageGeometry, imageMaterial);
 
               let imagePosition = new THREE.Vector3(
-                0,
-                0.1 * panelHeight,
+                -panelWidth / 2 + imageWidth / 2 + padding,
+                contentStartY - imageHeight / 2,
                 0.3
               );
               imagePosition = panel.localToWorld(imagePosition);
@@ -317,63 +377,56 @@ export default {
               console.error("Error loading image:", error);
             }
           );
-          currentY -= 6;
+          imageEndY = contentStartY - imageHeight;
         }
 
-        // Description text (wrapped)
-        if (config.text) {
-          const lines = this.wrapText(config.text, panelWidth - 2, 0.3);
-          const lineHeight = 0.5;
+        // URL Buttons if provided (array of {title, url} objects)
+        // Position them at the bottom of the panel
+        if (config.urls && Array.isArray(config.urls)) {
+          const buttonHeight = 0.8;
+          const buttonSpacing = 0.4;
+          const buttonPadding = 0.6;
+          const bottomMargin = 0.5;
 
-          lines.forEach((line, index) => {
-            const textGeometry = new TextGeometry(line, {
+          // Position buttons at the bottom of the panel
+          currentY = -panelHeight / 2 + buttonHeight / 2 + bottomMargin;
+
+          let buttonX = 0;
+          const totalButtonsWidth = config.urls.reduce((sum, urlObj) => {
+            const tempGeometry = new TextGeometry(urlObj.title, {
               font: font,
               size: 0.3,
               height: 0.02,
               curveSegments: 12,
             });
-            textGeometry.computeBoundingBox();
-            const textWidth =
-              textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+            tempGeometry.computeBoundingBox();
+            const textWidth = tempGeometry.boundingBox.max.x - tempGeometry.boundingBox.min.x;
+            return sum + textWidth + buttonPadding + buttonSpacing;
+          }, 0) - buttonSpacing;
 
-            const textMaterial = new THREE.MeshBasicMaterial({
-              color: 0x555555,
-              transparent: true,
-              opacity: 0,
+          let startX = -totalButtonsWidth / 2;
+
+          config.urls.forEach((urlObj, index) => {
+            // Calculate button width based on text width
+            const urlTextGeometry = new TextGeometry(urlObj.title, {
+              font: font,
+              size: 0.3,
+              height: 0.02,
+              curveSegments: 12,
             });
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            let textPosition = new THREE.Vector3(
-              textWidth * -0.5,
-              currentY - index * lineHeight,
-              0.25
-            );
-            textPosition = panel.localToWorld(textPosition);
+            urlTextGeometry.computeBoundingBox();
+            const urlTextWidth =
+              urlTextGeometry.boundingBox.max.x -
+              urlTextGeometry.boundingBox.min.x;
+            const urlTextHeight =
+              urlTextGeometry.boundingBox.max.y -
+              urlTextGeometry.boundingBox.min.y;
 
-            textMesh.position.set(
-              textPosition.x,
-              textPosition.y,
-              textPosition.z
-            );
-            textMesh.rotation.copy(panel.rotation);
-            panelGroup.add(textMesh);
-            objectsToAnimate.push(textMesh);
-          });
-
-          currentY -= lines.length * lineHeight + 0.5;
-        }
-
-        // URL Buttons if provided (array of {title, url} objects)
-        if (config.urls && Array.isArray(config.urls)) {
-          const urlButtonWidth = 4;
-          const urlButtonHeight = 0.8;
-          const buttonSpacing = 0.3;
-
-          config.urls.forEach((urlObj) => {
-            console.log(urlObj);
+            const urlButtonWidth = urlTextWidth + buttonPadding;
 
             const urlButtonGeometry = new THREE.BoxGeometry(
               urlButtonWidth,
-              urlButtonHeight,
+              buttonHeight,
               0.2
             );
             const urlButtonMaterial = new THREE.MeshBasicMaterial({
@@ -387,7 +440,7 @@ export default {
             );
 
             let urlButtonPosition = new THREE.Vector3(
-              0,
+              startX + urlButtonWidth / 2,
               currentY,
               0.1
             );
@@ -417,20 +470,6 @@ export default {
             urlButtonOutline.rotation.copy(urlButton.rotation);
             panelGroup.add(urlButtonOutline);
             objectsToAnimate.push(urlButtonOutline);
-            //console.log(urlObj);
-            const urlTextGeometry = new TextGeometry(urlObj.title, {
-              font: font,
-              size: 0.3,
-              height: 0.02,
-              curveSegments: 12,
-            });
-            urlTextGeometry.computeBoundingBox();
-            const urlTextWidth =
-              urlTextGeometry.boundingBox.max.x -
-              urlTextGeometry.boundingBox.min.x;
-            const urlTextHeight =
-              urlTextGeometry.boundingBox.max.y -
-              urlTextGeometry.boundingBox.min.y;
 
             const urlTextMaterial = new THREE.MeshBasicMaterial({
               color: 0xffffff,
@@ -440,7 +479,7 @@ export default {
             const urlTextMesh = new THREE.Mesh(urlTextGeometry, urlTextMaterial);
 
             let urlTextPosition = new THREE.Vector3(
-              -urlTextWidth / 2,
+              startX + urlButtonWidth / 2 - urlTextWidth / 2,
               currentY - urlTextHeight / 2,
               0.25
             );
@@ -465,10 +504,8 @@ export default {
             urlButton.userData.outline = urlButtonOutline;
             clickableObjectsArray.push(urlButton);
 
-            currentY -= urlButtonHeight + buttonSpacing;
+            startX += urlButtonWidth + buttonSpacing;
           });
-
-          currentY -= 0.4;
         }
 
         // X Close button (upper left corner)
