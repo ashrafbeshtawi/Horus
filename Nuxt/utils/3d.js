@@ -344,6 +344,7 @@ export default {
           textureLoader.load(
             config.imageUrl,
             (texture) => {
+              texture.colorSpace = THREE.SRGBColorSpace;
               const imageGeometry = new THREE.PlaneGeometry(
                 imageWidth,
                 imageHeight

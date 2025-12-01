@@ -112,7 +112,7 @@ export default {
     this.loadWhales(this.scene)
 
     // uncomment for debugging :)
-    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
   },
   methods: {
     getMixersArray: function () {
@@ -316,7 +316,9 @@ export default {
           urls: [
             { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus (3D Portfolio)' },
             { url: 'https://mocking-bird-three.vercel.app/', title: 'Mocking-Bird (Fullstack App)' }
-          ]
+          ],
+          imageUrl : '/img/frontend.png'
+
         },
         [9.3, 7.5, 30],
         [-25, 16, 16],
