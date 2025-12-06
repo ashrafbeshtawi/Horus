@@ -1,5 +1,5 @@
 <template>
-  <!--<v-btn @click="this.debugCamera()">Show Position</v-btn>-->
+  <!--<v-btn> {{ Math.floor(camera?.position.x) }}, {{ Math.floor(camera?.position.y) }}, {{ Math.floor(camera?.position.z) }}</v-btn>-->
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>  <section
@@ -112,7 +112,7 @@ export default {
     this.loadWhales(this.scene)
 
     // uncomment for debugging :)
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
   },
   methods: {
     getMixersArray: function () {
@@ -222,11 +222,6 @@ export default {
         z: this.camera.rotation.z
       };
     },
-    debugCamera: function () {
-      console.log(this.camera.position);
-      console.log(this.camera.rotation);
-
-    },
     handleButtonClick(buttonData) {
       // Save current camera position
       this.previousCameraPosition = {
@@ -285,26 +280,6 @@ export default {
       });
     },
     addButtons() {
-      // Who am I?
-      graphicUtils.addButton(
-        this.scene,
-        this.clickableObjects,
-        'Who am I?',
-        {
-          title: 'Ashraf Beshtawi',
-          text: 'I’m Ashraf — a 29-year-old Senior Backend & AI Engineer based in Berlin, father, and passionate programmer with 5+ years experience in PHP, Symfony, SQL, MongoDB, and modern frontend frameworks like Next.js & Nuxt.js — building scalable systems, AI automation, and Web3 apps.',
-          urls: [
-            { url: '/pdf/Ashraf Beshtawi- CV.pdf', title: 'View my CV' },
-          ],
-          imageUrl : '/img/me.jpeg'
-        },
-        [9.3, 9, 30],
-        [20, 10, 12],
-        [20, 10, 22],
-        [0, 0, 0],
-        this.handleButtonClick
-      );
-
       // Frontend
       graphicUtils.addButton(
         this.scene,
@@ -312,15 +287,15 @@ export default {
         'Frontend',
         {
           title: 'Frontend & 3D Experiences',
-          text: 'Next.js, Nuxt.js & Three.js — immersive and performant web apps.',
+          text: 'When it comes to Frontend, I specialize in Next.js, Nuxt.js, Three.js & WebGL — crafting immersive 3D web experiences and interactive UIs. Feel Free to explore some of my projects.',
           urls: [
-            { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus (3D Portfolio)' },
-            { url: 'https://mocking-bird-three.vercel.app/', title: 'Mocking-Bird (Fullstack App)' }
+            { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus' },
+            { url: 'https://mocking-bird-three.vercel.app/', title: 'Mocking-Bird' }
           ],
           imageUrl : '/img/frontend.png'
 
         },
-        [9.3, 7.5, 30],
+        [9.3, 9, 30],
         [-25, 16, 16],
         [-25, 16, 26],
         [0, 0, 0],
@@ -337,11 +312,12 @@ export default {
           text: 'Symfony · PHP 8 · PostgreSQL · PHPUnit — reliable APIs & scalable backend systems.',
           urls: [
             { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub Backend Repos' }
-          ]
+          ],
+          imageUrl : '/img/backend.png'
         },
-        [9.3, 6, 30],
+        [9.3, 7.5, 30],
         [13, 11, -13],
-        [19, 15.5, -18],
+        [19, 17, -20],
         [-2.4, 0.6, 2.6],
         this.handleButtonClick
       );
@@ -355,12 +331,13 @@ export default {
           title: 'Web3 & Real Estate Tokenization',
           text: 'LandLord — fractional investment in real estate using blockchain.',
           urls: [
-            { url: 'https://landlord-liart.vercel.app/', title: 'LandLord (Web3 Project)' }
-          ]
+            { url: 'https://landlord-liart.vercel.app/', title: 'LandLord' }
+          ],
+          imageUrl : '/img/web3.png'
         },
-        [9.3, 4.5, 30],
+        [9.3, 6, 30],
         [-26, 5, 6],
-        [-39, 6.5, 4.7],
+        [-37, 6, 6],
         [-1, -1.3, -1],
         this.handleButtonClick
       );
@@ -374,16 +351,35 @@ export default {
           title: 'AI & Automation',
           text: 'Genetic Algorithms + n8n Workflows — intelligent automation & algorithmic trading.',
           urls: [
-            { url: 'https://github.com/ashrafbeshtawi/Auto-Trader', title: 'Auto-Trader (AI Trading)' }
-          ]
+            { url: 'https://github.com/ashrafbeshtawi/Auto-Trader', title: 'Auto-Trader' }
+          ],
+          imageUrl : '/img/ai.png'
         },
-        [9.3, 3, 30],
+        [9.3, 4.5, 30],
         [-32, 2.4, 33],
         [-39, 3, 40],
         [-0.07, -0.7, 0],
         this.handleButtonClick
       );
-
+      // Who am I?
+      graphicUtils.addButton(
+        this.scene,
+        this.clickableObjects,
+        'Who am I?',
+        {
+          title: 'Ashraf Beshtawi',
+          text: 'I’m Ashraf — a 29-year-old Senior Backend & AI Engineer based in Berlin, father, and passionate programmer with 5+ years experience in PHP, Symfony, SQL, MongoDB, and modern frontend frameworks like Next.js & Nuxt.js — building scalable systems, AI automation, and Web3 apps.',
+          urls: [
+            { url: '/pdf/Ashraf Beshtawi- CV.pdf', title: 'View my CV' },
+          ],
+          imageUrl : '/img/me.jpeg'
+        },
+        [9.3, 3, 30],
+        [20, 10, 12],
+        [20, 10, 22],
+        [0, 0, 0],
+        this.handleButtonClick
+      );
       // Let’s Connect
       graphicUtils.addButton(
         this.scene,
