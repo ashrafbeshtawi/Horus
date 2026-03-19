@@ -210,7 +210,7 @@ export default {
           text: 'Senior Backend & AI Engineer based in Berlin with 5+ years of professional experience. Core stack: PHP, Symfony, PostgreSQL, MongoDB, Next.js, Nuxt.js, and Three.js. Specialized in building scalable backend systems, pioneering AI automation workflows, crafting immersive 3D web experiences, and innovating in the Web3 and blockchain space.',
           urls: [
             { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub' },
-            { url: 'https://www.linkedin.com/in/ashraf-beshtawi/', title: 'LinkedIn' },
+            { url: 'https://www.linkedin.com/in/ashraf-beshtawi-1308a11a8', title: 'LinkedIn' },
           ],
           imageUrl: '/img/me.jpeg',
           x: 0, z: 5,           // Center of city, visible from start
