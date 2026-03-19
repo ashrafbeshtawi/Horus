@@ -1,471 +1,318 @@
 <template>
-  <!--<v-btn> {{ Math.floor(camera?.position.x) }}, {{ Math.floor(camera?.position.y) }}, {{ Math.floor(camera?.position.z) }}</v-btn>-->
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
-  </div>  <section
-      id="container"
-      class="w-full h-screen relative"
-      v-if="isWebGL2Available"
-  >
-  </section>
-  <UAlert
-      v-else
-      icon="i-heroicons-command-line"
-      color="rose"
-      variant="solid"
-      title="Error:"
-      description="This website uses WebGL2 but your browser does not support it"
-  />
+  </div>
+  <div id="controls-hint" v-if="controlsEnabled && showControlsHint">
+    <p>W / Up &mdash; Forward &nbsp; S / Down &mdash; Backward</p>
+    <p>A/D / Left/Right &mdash; Turn</p>
+    <p>Right Drag &mdash; Free Look &nbsp; Scroll &mdash; Zoom</p>
+  </div>
+  <section id="container" class="w-full h-screen relative" v-if="isWebGL2Available"></section>
+  <UAlert v-else icon="i-heroicons-command-line" color="rose" variant="solid"
+    title="Error:" description="This website uses WebGL2 but your browser does not support it" />
 </template>
 
 <style scoped>
+#overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex; justify-content: center; align-items: center; z-index: 9999;
+}
+#controls-hint {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.7); color: #fff; padding: 12px 22px;
+  border-radius: 10px; z-index: 100; text-align: center; font: 14px Arial;
+  pointer-events: none;
+}
+#controls-hint p { margin: 3px 0; }
 </style>
 
 <script setup>
 </script>
 
 <script>
-
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import graphicUtils from '../utils/3d.js';
+import g from '../utils/3d.js';
 import helper from '../utils/helper.js';
-import {markRaw} from 'vue'
-import gsap from "gsap";
+import { markRaw } from 'vue';
+
+const ISLAND_CENTER = { x: 0, z: 0 };
 
 export default {
   data() {
     return {
       isWebGL2Available: true,
       animationStarted: false,
+      showControlsHint: true,
       soundObject: null,
       mixers: [],
       whales: [],
       camera: null,
       scene: null,
       renderer: null,
-      introPlayed: false,
-      ThreeMeshUI: null,
       clock: new THREE.Clock(),
+      character: null,
+      wanderingNPCs: [],
+      worldObjs: null,
+
+      cameraAngleX: Math.PI,
+      cameraAngleY: 0.4,
+      cameraDistance: 10,
+      isDragging: false,
+      lastMouseX: 0,
+      lastMouseY: 0,
+
+      keys: {},
+      characterSpeed: 0.22,
+      turnSpeed: 0.04,
+
       raycaster: null,
       mouse: null,
       clickableObjects: [],
-      currentView: 'main',
-      previousCameraPosition: null,
-      previousCameraRotation: null,
-      panelObjects: null,
-      // handshake effect
-      cameraRotationInLastAnimationFrame: null,
-      cameraStartShakeEffectPosition: null,
-      handshakeEffectMovementDirection: 1,
-      handshakeEffectMovementStep: 0.003,
-      handshakeMaxMovementPercentage: 0.05,
 
+      introPlaying: false,
+      controlsEnabled: false,
     }
   },
-  beforeUnmount() {
-    // Clean up event listeners
-    window.removeEventListener('mousemove', this.onMouseMove);
-    window.removeEventListener('click', this.onMouseClick);
-  },
-  mounted() {
-    graphicUtils.load3dMenuLibrary().then(
-        library => {
-          this.ThreeMeshUI = library;
-        }
-    );
-    this.camera = graphicUtils.getCamera();
-    this.scene = markRaw(new THREE.Scene());
-    this.renderer = markRaw(graphicUtils.initRenderer(this.animate, 'container'));
-    this.isWebGL2Available = WebGL.isWebGL2Available();
 
-    // important to have raycaster & mouse in order to interact with 3D buttons
+  beforeUnmount() {
+    for (const e of ['keydown','keyup','mousedown','mouseup','mousemove','click','wheel','resize','contextmenu'])
+      window.removeEventListener(e, this['_h_' + e]);
+  },
+
+  mounted() {
+    this.camera = g.getCamera();
+    this.scene = markRaw(new THREE.Scene());
+    this.renderer = markRaw(g.initRenderer(this.animate, 'container'));
+    this.isWebGL2Available = WebGL.isWebGL2Available();
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
-    window.addEventListener('mousemove', this.onMouseMove);
-    window.addEventListener('click', this.onMouseClick);
-    
-    const audioListener = new THREE.AudioListener();
-    this.camera.add(audioListener);
-    
-    // adding music
-    this.soundObject = graphicUtils.loadMusic(audioListener, '/music/background-music.mp3');
+    this._fwd = new THREE.Vector3();
+    this._mv = new THREE.Vector3();
 
-    this.addButtons();
-    // setting light & background color
+    const H = {
+      keydown: e => { this.keys[e.code] = true; },
+      keyup: e => { this.keys[e.code] = false; },
+      mousedown: e => { if (e.button === 2) { this.isDragging = true; this.lastMouseX = e.clientX; this.lastMouseY = e.clientY; } },
+      mouseup: e => { if (e.button === 2) this.isDragging = false; },
+      mousemove: e => {
+        if (this.isDragging && this.controlsEnabled) {
+          this.cameraAngleX -= (e.clientX - this.lastMouseX) * 0.005;
+          this.cameraAngleY = Math.max(0.1, Math.min(1.3, this.cameraAngleY + (e.clientY - this.lastMouseY) * 0.005));
+          this.lastMouseX = e.clientX; this.lastMouseY = e.clientY;
+        }
+      },
+      click: e => { if (e.button === 0) this.handleClick(e); },
+      wheel: e => { if (this.controlsEnabled) this.cameraDistance = Math.max(4, Math.min(25, this.cameraDistance + e.deltaY * 0.01)); },
+      resize: () => {
+        if (this.camera && this.renderer) {
+          this.camera.aspect = window.innerWidth / window.innerHeight;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+      },
+      contextmenu: e => e.preventDefault(),
+    };
+    for (const [e, fn] of Object.entries(H)) { this['_h_' + e] = fn; window.addEventListener(e, fn); }
+
+    // Audio
+    const listener = new THREE.AudioListener();
+    this.camera.add(listener);
+    this.soundObject = g.loadMusic(listener, '/music/background-music.mp3');
+
+    // Scene lighting
     this.scene.background = new THREE.Color('#87CEEB');
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 3);
-    this.scene.add(hemisphereLight);
+    this.scene.fog = new THREE.Fog(0x87CEEB, 40, 90);
+    this.scene.add(new THREE.HemisphereLight(0xffffee, 0x446644, 1.5));
+    const sun = new THREE.DirectionalLight(0xffffff, 2);
+    sun.position.set(20, 30, 10); this.scene.add(sun);
+    const fill = new THREE.DirectionalLight(0x8888ff, 0.5);
+    fill.position.set(-10, 10, -10); this.scene.add(fill);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-    directionalLight.position.set(7, 17, 53);
-    this.scene.add(directionalLight);
+    // Build the custom world (instant — pure geometry, no model loading)
+    this.worldObjs = markRaw(g.createWorld(this.scene));
 
-    // loading modells
-    graphicUtils.loadModell(
-        '/town/scene.gltf',
-        this.scene,
-        ['The Life'],
-        this
-    );
-    this.loadWhales(this.scene)
+    // Character at island center
+    const startY = g.getGroundY(0, -8);
+    this.character = markRaw(g.createCharacter(this.scene, new THREE.Vector3(0, startY, -8)));
 
-    // uncomment for debugging :)
-    //const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // Place panels and NPCs (all instant — no raycasting, no async)
+    this.placeDiscoveryPanels();
+    this.wanderingNPCs = g.createWanderingNPCs(this.scene, 12);
+
+    // Whales in the sky
+    for (let i = 0; i < 6; i++) {
+      g.loadModell('/blue_whale/scene.gltf', this.scene, ['Swimming'], this,
+        helper.getRandomFloat(0.002, 0.007), [0, Math.random() * Math.PI * 2, 0],
+        [helper.getRandomInt(-50, 50), helper.getRandomInt(18, 35), helper.getRandomInt(-40, 40)], true);
+    }
+
+    setTimeout(() => { this.showControlsHint = false; }, 10000);
   },
+
   methods: {
-    getMixersArray: function () {
-      return this.mixers;
-    },
-    getWhalesArray: function () {
-      return this.whales;
-    },
-    loadWhales: function (scene) {
-      for (let i = 0; i < 10; i++) {
-        graphicUtils.loadModell(
-            '/blue_whale/scene.gltf',
-            scene,
-            ['Swimming'],
-            this,
-            helper.getRandomFloat(0.001, 0.01),
-            [0, 0.5 * Math.PI, 0],
-            [
-                helper.getRandomInt(-70, 40),
-              helper.getRandomInt(20, 32),
-              helper.getRandomInt(-25, 50)
-            ],
-            true
-        );
+    getMixersArray() { return this.mixers; },
+    getWhalesArray() { return this.whales; },
+
+    placeDiscoveryPanels() {
+      // Banners on the 4 sides of the square street (inner sidewalk) + center
+      const SQ = 22;
+      const panels = [
+        {
+          title: 'Creative Web Experiences',
+          text: 'Crafting immersive, interactive web apps with modern JavaScript frameworks. Horus is this 3D explorable portfolio built with Three.js, Nuxt.js and Vue.js featuring procedural world generation. WinXp faithfully recreates the Windows XP desktop experience as a portfolio using Next.js and React. Mocking-Bird explores creative frontend patterns with TypeScript.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus' },
+            { url: 'https://github.com/ashrafbeshtawi/WinXp', title: 'WinXp' },
+            { url: 'https://github.com/ashrafbeshtawi/Mocking-Bird', title: 'Mocking-Bird' },
+          ],
+          imageUrl: '/img/frontend.png',
+          x: 0, z: (SQ - 1),    // South side of square
+        },
+        {
+          title: 'AI & Smart Systems',
+          text: 'Building intelligent automation and AI-powered tools. Context Paging implements virtual memory management for AI agents, enabling unlimited conversation context through smart page swapping. Auto-Trader leverages genetic algorithms and real-time market data for fully autonomous algorithmic trading strategies in Python.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi/context-paging', title: 'Context Paging' },
+            { url: 'https://github.com/ashrafbeshtawi/Auto-Trader', title: 'Auto-Trader' },
+          ],
+          imageUrl: '/img/ai.png',
+          x: -(SQ - 1), z: 0,   // West side of square
+        },
+        {
+          title: 'Web3 & Blockchain',
+          text: 'Pioneering blockchain integration for real-world assets. Landlord is a full-stack DeFi platform enabling fractional real estate investment through tokenization. Built with TypeScript, it demonstrates deep expertise in smart contract development, decentralized application architecture, and Web3 wallet integration.',
+          urls: [
+            { url: 'https://landlord-liart.vercel.app/', title: 'Landlord App' },
+            { url: 'https://github.com/ashrafbeshtawi/Landlord', title: 'Landlord Code' },
+          ],
+          imageUrl: '/img/web3.png',
+          x: (SQ - 1), z: 0,    // East side of square
+        },
+        {
+          title: 'Mobile Development',
+          text: 'Native mobile app development with Kotlin and modern Android architecture patterns. Casually is a mobile application built with Kotlin showcasing MVVM architecture, clean code principles, Material Design components, and responsive mobile UI that adapts across device sizes.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi/Casually', title: 'Casually' },
+          ],
+          imageUrl: '/img/backend.png',
+          x: 0, z: -(SQ - 1),   // North side of square
+        },
+        {
+          title: 'Ashraf Beshtawi',
+          text: 'Senior Backend & AI Engineer based in Berlin with 5+ years of professional experience. Core stack: PHP, Symfony, PostgreSQL, MongoDB, Next.js, Nuxt.js, and Three.js. Specialized in building scalable backend systems, pioneering AI automation workflows, crafting immersive 3D web experiences, and innovating in the Web3 and blockchain space.',
+          urls: [
+            { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub' },
+            { url: 'https://www.linkedin.com/in/ashraf-beshtawi/', title: 'LinkedIn' },
+          ],
+          imageUrl: '/img/me.jpeg',
+          x: 0, z: 5,           // Center of city, visible from start
+        },
+      ];
+
+      for (const p of panels) {
+        const y = g.getGroundY(p.x, p.z);
+        if (isNaN(y)) continue;
+        const rot = g.faceToward(p.x, p.z, ISLAND_CENTER.x, ISLAND_CENTER.z);
+        const pos = new THREE.Vector3(p.x, y, p.z);
+        g.createDiscoveryPanel(this.scene,
+          { title: p.title, text: p.text, urls: p.urls, imageUrl: p.imageUrl },
+          pos, rot, this.clickableObjects);
+        g.createBannerCrowd(this.scene, pos, rot);
       }
     },
-    startAnimation: function () {
+
+    startAnimation() {
       this.animationStarted = true;
       this.soundObject.context.resume();
+      this.introPlaying = true;
+      g.playIntroAnimation(this.camera, this.character,
+        this.cameraAngleX, this.cameraDistance, this.cameraAngleY,
+        () => { this.introPlaying = false; this.controlsEnabled = true; });
     },
 
-    animate: function() {
-      if (!this.animationStarted) {
-        return;
-      }
-      if (this.ThreeMeshUI) {
-        this.ThreeMeshUI.update();
-      }
-
-      // animate the loaded modell
+    animate() {
+      if (!this.animationStarted) return;
       const delta = this.clock.getDelta();
-      for (let i = 0; i < this.mixers.length; i++) {
-        this.mixers[i].update(delta);
-      }
+
+      for (const m of this.mixers) m.update(delta);
+      // Whales drift in the sky
+      for (const w of this.whales) w.position.x = w.position.x > 80 ? -60 : w.position.x + 0.015;
+
+      // Windmill
+      if (this.worldObjs?.windmillBlade) this.worldObjs.windmillBlade.rotation.z += delta * 0.8;
+      // Banner crowd animation
+      g.updateBannerCrowds(delta, this.clock.elapsedTime);
+
+      if (this.wanderingNPCs.length > 0) g.updateWanderingNPCs(this.wanderingNPCs, delta);
+      if (this.controlsEnabled) this.updateMovement(delta);
+      if (!this.introPlaying) this.updateCamera();
       this.renderer.render(this.scene, this.camera);
+    },
 
-      // move whales
-      for (let i = 0; i < this.whales.length; i++) {
-        let x = this.whales[i].position.x;
-        this.whales[i].position.x = x > 150 ? -115 : this.whales[i].position.x + 0.01;
+    updateMovement(delta) {
+      if (!this.character) return;
+      if (this.keys['ArrowLeft'] || this.keys['KeyA']) this.cameraAngleX += this.turnSpeed;
+      if (this.keys['ArrowRight'] || this.keys['KeyD']) this.cameraAngleX -= this.turnSpeed;
+
+      const fwd = this._fwd;
+      fwd.set(-Math.sin(this.cameraAngleX), 0, -Math.cos(this.cameraAngleX));
+      const mv = this._mv; mv.set(0, 0, 0);
+      let isMoving = false;
+      if (this.keys['ArrowUp'] || this.keys['KeyW']) { mv.x += fwd.x; mv.z += fwd.z; isMoving = true; }
+      if (this.keys['ArrowDown'] || this.keys['KeyS']) { mv.x -= fwd.x; mv.z -= fwd.z; isMoving = true; }
+
+      if (isMoving) {
+        mv.normalize().multiplyScalar(this.characterSpeed);
+        const nx = this.character.position.x + mv.x, nz = this.character.position.z + mv.z;
+        const colliders = this.worldObjs?.colliders;
+        if (g.canMoveTo(nx, nz, colliders)) {
+          this.character.position.x = nx; this.character.position.z = nz;
+          this.character.position.y += (g.getGroundY(nx, nz) - this.character.position.y) * 0.2;
+        } else {
+          // Try sliding along walls (try X only, then Z only)
+          if (g.canMoveTo(nx, this.character.position.z, colliders)) {
+            this.character.position.x = nx;
+          } else if (g.canMoveTo(this.character.position.x, nz, colliders)) {
+            this.character.position.z = nz;
+          }
+        }
       }
 
-      if (!this.introPlayed) {
-        this.introPlayed = true;
-        graphicUtils.moveToStartingPoint(this.camera);
-      }
-
-      // Handshake effect implementation
-      // Initialize cameraRotationInLastAnimationFrame on first run
-      if (this.cameraRotationInLastAnimationFrame === null) {
-        this.cameraRotationInLastAnimationFrame = {
-          x: this.camera.rotation.x,
-          y: this.camera.rotation.y,
-          z: this.camera.rotation.z
-        };
-      }
-
-      // Check if camera rotation hasn't changed (camera is not rotating)
-      const rotationThreshold = 0.0001; // Small threshold for floating point comparison
-      const rotationUnchanged = 
-        Math.abs(this.camera.rotation.x - this.cameraRotationInLastAnimationFrame.x) < rotationThreshold &&
-        Math.abs(this.camera.rotation.y - this.cameraRotationInLastAnimationFrame.y) < rotationThreshold &&
-        Math.abs(this.camera.rotation.z - this.cameraRotationInLastAnimationFrame.z) < rotationThreshold;
-
-      if (rotationUnchanged) {
-        // Camera is not rotating, start shake effect
-        
-        // Initialize start position if not set
-        if (this.cameraStartShakeEffectPosition === null) {
-          this.cameraStartShakeEffectPosition = this.camera.position.y;
-        }
-
-        // Calculate movement amount
-        const movementAmount = this.handshakeEffectMovementDirection * this.handshakeEffectMovementStep;
-        
-        // Apply movement to camera
-        this.camera.position.y += movementAmount;
-
-        // Calculate how far we've moved from start position
-        const distanceFromStart = Math.abs(this.camera.position.y - this.cameraStartShakeEffectPosition);
-        const maxDistance = Math.abs(this.cameraStartShakeEffectPosition * this.handshakeMaxMovementPercentage);
-
-        // Check if we've reached the maximum movement distance
-        if (distanceFromStart >= maxDistance) {
-          // Reverse direction
-          this.handshakeEffectMovementDirection *= -1;
-        }
-      } else {
-        // Camera is rotating, reset shake effect
-        this.cameraStartShakeEffectPosition = null;
-      }
-
-      // Update last frame rotation
-      this.cameraRotationInLastAnimationFrame = {
-        x: this.camera.rotation.x,
-        y: this.camera.rotation.y,
-        z: this.camera.rotation.z
-      };
-    },
-    handleButtonClick(buttonData) {
-      // Save current camera position
-      this.previousCameraPosition = {
-        x: this.camera.position.x,
-        y: this.camera.position.y,
-        z: this.camera.position.z
-      };
-      this.previousCameraRotation = {
-        x: this.camera.rotation.x,
-        y: this.camera.rotation.y,
-        z: this.camera.rotation.z
-      };
-      console.log(buttonData.panelPosition, buttonData.panelCameraPosition);
-      for (let i = 0; i < buttonData.panelCameraPosition.length; i++) {
-        console.log(buttonData.panelCameraPosition[i]- buttonData.panelPosition[i]);
-      }
-
-      // Create info panel
-      this.panelObjects = graphicUtils.createInfoPanel(
-        this.scene,
-        buttonData.config,
-        buttonData.panelPosition,
-        buttonData.panelCameraRotation,
-        this.clickableObjects,
-        this.handleBackButton
-      );
-      
-      // Move camera to view the panel
-      gsap.to(this.camera.position, {
-        x: buttonData.panelCameraPosition[0],
-        y: buttonData.panelCameraPosition[1],
-        z: buttonData.panelCameraPosition[2],
-        duration: 1.5,
-        onComplete: () => {
-          this.currentView = 'panel';
-          this.fadeInPanel();
-        }
-      });
-      gsap.to(this.camera.rotation, {
-        x: buttonData.panelCameraRotation[0],
-        y: buttonData.panelCameraRotation[1],
-        z: buttonData.panelCameraRotation[2],
-        duration: 1.5
-      });
-    },
-    
-    fadeInPanel() {
-      if (!this.panelObjects || !this.panelObjects.objectsToAnimate) return;
-      
-      this.panelObjects.objectsToAnimate.forEach((obj, index) => {
-        gsap.to(obj.material, {
-          opacity: 1,
-          duration: 0.5,
-          delay: index * 0.05
-        });
-      });
-    },
-    addButtons() {
-          // Frontend
-          graphicUtils.addButton(
-            this.scene,
-            this.clickableObjects,
-            'Frontend',
-            {
-              title: 'Frontend & Immersive 3D Experiences',
-              text: 'Expert in Next.js, Nuxt.js, Three.js & WebGL for building high-performance, responsive UIs and crafting cutting-edge, immersive 3D web experiences. Successfully led the development of complex interactive applications.',
-              urls: [
-                { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus' },
-                { url: 'https://mocking-bird-three.vercel.app/', title: 'Mocking-Bird' }
-              ],
-              imageUrl : '/img/frontend.png'
-
-            },
-            [9.3, 7.5, 30],
-            [-25, 16, 16],
-            [-25, 16, 26],
-            [0, 0, 0],
-            this.handleButtonClick
-          );
-
-          // Backend
-          graphicUtils.addButton(
-            this.scene,
-            this.clickableObjects,
-            'Backend',
-            {
-              title: 'Scalable Backend Engineering',
-              text: 'Specializing in robust and scalable backend systems using Symfony, PHP 8, and PostgreSQL. Proven track record in designing and deploying reliable, high-availability APIs and microservices.',
-              urls: [
-                { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub Backend Repos' }
-              ],
-              imageUrl : '/img/backend.png'
-            },
-            [9.3, 6, 30],
-            [13, 11, -13],
-            [19, 17, -20],
-            [-2.4, 0.6, 2.6],
-            this.handleButtonClick
-          );
-
-          // Web3
-          graphicUtils.addButton(
-            this.scene,
-            this.clickableObjects,
-            'Web3',
-            {
-              title: 'Web3 & Blockchain Solutions',
-              text: 'Focus on innovative blockchain integration, specifically in real estate tokenization. Developed LandLord for fractional investment, demonstrating expertise in DeFi concepts and secure smart contracts.',
-              urls: [
-                { url: 'https://landlord-liart.vercel.app/', title: 'LandLord' }
-              ],
-              imageUrl : '/img/web3.png'
-            },
-            [9.3, 4.5, 30],
-            [-26, 5, 6],
-            [-37, 6, 6],
-            [-1, -1.3, -1],
-            this.handleButtonClick
-          );
-
-          // AI
-          graphicUtils.addButton(
-            this.scene,
-            this.clickableObjects,
-            'AI',
-            {
-              title: 'AI-Driven Automation & Trading',
-              text: 'Leveraging Genetic Algorithms and n8n Workflows to develop intelligent automation tools and algorithmic trading systems. Proven ability to translate complex data into actionable, automated strategies.',
-              urls: [
-                { url: 'https://github.com/ashrafbeshtawi/Auto-Trader', title: 'Auto-Trader' }
-              ],
-              imageUrl : '/img/ai.png'
-            },
-            [9.3, 3, 30],
-            [-32, 2.4, 33],
-            [-39, 3, 40],
-            [-0.07, -0.7, 0],
-            this.handleButtonClick
-          );
-          // Who am I?
-          graphicUtils.addButton(
-            this.scene,
-            this.clickableObjects,
-            'Get in Touch',
-            {
-              title: 'Ashraf Beshtawi',
-              text: 'A highly motivated Senior Backend & AI Engineer based in Berlin with 5+ years of experience. Core expertise includes PHP, Symfony, SQL, MongoDB, Next.js, and Nuxt.js. Dedicated to building robust, scalable systems, pioneering AI automation, and innovating in the Web3 space.',
-              urls: [
-                { url: 'https://github.com/ashrafbeshtawi', title: 'GitHub' },
-                { url: 'https://www.linkedin.com/in/ashraf-beshtawi/', title: 'LinkedIn' }
-              ],
-              imageUrl : '/img/me.jpeg'
-            },
-            [9.3, 1.5, 30],
-            [20, 10, 12],
-            [20, 10, 22],
-            [0, 0, 0],
-            this.handleButtonClick
-          );
-
+      g.animateCharacter(this.character, isMoving, delta);
+      const target = this.cameraAngleX + Math.PI;
+      let d = target - this.character.rotation.y;
+      if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2;
+      this.character.rotation.y += d * 0.2;
     },
 
-
-
-    fadeOutPanel(callback) {
-      if (!this.panelObjects || !this.panelObjects.objectsToAnimate) return;
-      
-      this.panelObjects.objectsToAnimate.forEach((obj, index) => {
-        gsap.to(obj.material, {
-          opacity: 0,
-          duration: 0.3,
-          delay: index * 0.02,
-          onComplete: index === this.panelObjects.objectsToAnimate.length - 1 ? callback : undefined
-        });
-      });
+    updateCamera() {
+      if (!this.character) return;
+      const d = this.cameraDistance, cy = this.cameraAngleY;
+      this.camera.position.set(
+        this.character.position.x + Math.sin(this.cameraAngleX) * d * Math.cos(cy),
+        this.character.position.y + d * Math.sin(cy),
+        this.character.position.z + Math.cos(this.cameraAngleX) * d * Math.cos(cy));
+      this.camera.lookAt(this.character.position.x, this.character.position.y + 1, this.character.position.z);
     },
-    
-    handleBackButton() {
-      // Fade out panel
-      this.fadeOutPanel(() => {
-        // Remove panel and associated objects
-        if (this.panelObjects) {
-          this.scene.remove(this.panelObjects.panelGroup);
-          
-          // Remove clickable buttons from the panel
-          this.clickableObjects = this.clickableObjects.filter(obj => {
-            return !obj.userData.panelGroup || obj.userData.panelGroup !== this.panelObjects.panelGroup;
-          });
-        }
-        
-        this.panelObjects = null;
-      });
-      
-      // Return camera to previous position
-      gsap.to(this.camera.position, {
-        x: this.previousCameraPosition.x,
-        y: this.previousCameraPosition.y,
-        z: this.previousCameraPosition.z,
-        duration: 1.5
-      });
-      gsap.to(this.camera.rotation, {
-        x: this.previousCameraRotation.x,
-        y: this.previousCameraRotation.y,
-        z: this.previousCameraRotation.z,
-        duration: 1.5,
-        onComplete: () => {
-          this.currentView = 'main';
-        }
-      });
-    },
-    
 
-    onMouseClick(event) {
-      this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    handleClick(e) {
+      this.mouse.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
       this.raycaster.setFromCamera(this.mouse, this.camera);
-      
-      const intersects = this.raycaster.intersectObjects(this.clickableObjects);
-      
-      if (intersects.length > 0) {
-        const clickedObject = intersects[0].object;
-        if (clickedObject.userData.onClick) {
-          clickedObject.userData.onClick(clickedObject.userData);
+      const hits = this.raycaster.intersectObjects(this.clickableObjects, true);
+      if (hits.length > 0) {
+        const { object: obj, uv } = hits[0];
+        if (obj.userData.isDiscoveryPanel && uv) {
+          const cx = uv.x * 1024, cy = (1 - uv.y) * 768;
+          for (const btn of obj.userData.urlButtons) {
+            if (cx >= btn.x && cx <= btn.x + btn.width && cy >= btn.y && cy <= btn.y + btn.height) {
+              window.open(btn.url, '_blank'); break;
+            }
+          }
         }
       }
     },
-    
   },
-  
 };
 </script>
-
-<style scoped>
-/* Style for the floating overlay */
-#overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-</style>
