@@ -559,34 +559,49 @@ export default {
       // Description text (larger font)
       ctx.fillStyle="#333"; ctx.font="24px Arial"; self._wt(ctx,config.text,tx,120,tw,32);
 
-      // === BUTTONS — horizontal row, centered, big ===
+      // === BUTTONS — auto layout: horizontal if they fit, vertical if not ===
       if(config.urls){
-        const bh=95, gap=24;
+        const hGap=24, vGap=16;
         ctx.font="bold 36px Arial";
         const btnWidths = config.urls.map(u => ctx.measureText(u.title).width + 110);
-        const totalW = btnWidths.reduce((a,b) => a+b, 0) + gap * (config.urls.length - 1);
-        let bx = Math.floor((1024 - totalW) / 2);
-        const by = 768 - 190 - bh;
+        const totalHW = btnWidths.reduce((a,b) => a+b, 0) + hGap * (config.urls.length - 1);
+        const fits = totalHW <= 980; // 1024 - 44 margin
 
-        config.urls.forEach((u,i)=>{
-          const bw = btnWidths[i];
-          // Shadow
-          ctx.fillStyle="rgba(0,0,0,0.25)"; self._rr(ctx, bx+5, by+6, bw, bh, 16, 1, 0);
-          // Button bg
+        const drawBtn = (bx, by, bw, bh, title) => {
+          ctx.fillStyle="rgba(0,0,0,0.25)"; self._rr(ctx, bx+5, by+5, bw, bh, 16, 1, 0);
           ctx.fillStyle="#1565C0"; self._rr(ctx, bx, by, bw, bh, 16, 1, 0);
           ctx.fillStyle="#1976D2"; self._rr(ctx, bx, by, bw, bh*0.5, 16, 1, 0);
-          // Border
           ctx.strokeStyle="#0d47a1"; ctx.lineWidth=4; self._rr(ctx, bx, by, bw, bh, 16, 0, 1);
-          // Arrow + title
-          ctx.fillStyle="#ffffff"; ctx.font="bold 36px Arial";
-          ctx.fillText("\u27A4  " + u.title, bx + 28, by + 48);
-          // "Click to visit"
-          ctx.fillStyle="#90caf9"; ctx.font="bold 22px Arial";
-          ctx.fillText("Click to visit", bx + 28, by + 78);
+          ctx.fillStyle="#ffffff"; ctx.font="bold " + (fits ? 36 : 34) + "px Arial";
+          ctx.fillText("\u27A4  " + title, bx + 24, by + (fits ? 48 : 42));
+          ctx.fillStyle="#90caf9"; ctx.font="bold " + (fits ? 22 : 20) + "px Arial";
+          ctx.fillText("Click to visit", bx + 24, by + (fits ? 78 : 66));
+        };
 
-          btns.push({x:bx, y:by, width:bw, height:bh, url:u.url});
-          bx += bw + gap;
-        });
+        if (fits) {
+          // Horizontal
+          const bh=95;
+          let bx = Math.floor((1024 - totalHW) / 2);
+          const by = 768 - 190 - bh;
+          config.urls.forEach((u,i)=>{
+            const bw = btnWidths[i];
+            drawBtn(bx, by, bw, bh, u.title);
+            btns.push({x:bx, y:by, width:bw, height:bh, url:u.url});
+            bx += bw + hGap;
+          });
+        } else {
+          // Vertical
+          const bh=78;
+          const maxBw = Math.min(Math.max(...btnWidths), 520);
+          const totalVH = config.urls.length * bh + (config.urls.length - 1) * vGap;
+          const startY = 768 - 140 - totalVH;
+          const bx = Math.floor((1024 - maxBw) / 2);
+          config.urls.forEach((u,i)=>{
+            const by = startY + i * (bh + vGap);
+            drawBtn(bx, by, maxBw, bh, u.title);
+            btns.push({x:bx, y:by, width:maxBw, height:bh, url:u.url});
+          });
+        }
       }
       tex.needsUpdate=true;
     };

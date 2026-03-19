@@ -2,10 +2,12 @@
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>
-  <div id="controls-hint" v-if="controlsEnabled && showControlsHint">
-    <p>W / Up &mdash; Forward &nbsp; S / Down &mdash; Backward</p>
+  <div id="controls-hint" v-if="controlsEnabled">
+    <p>W / Up &mdash; Forward</p>
+    <p>S / Down &mdash; Backward</p>
     <p>A/D / Left/Right &mdash; Turn</p>
-    <p>Right Drag &mdash; Free Look &nbsp; Scroll &mdash; Zoom</p>
+    <p>Right Drag &mdash; Free Look</p>
+    <p>Scroll &mdash; Zoom</p>
   </div>
   <section id="container" class="w-full h-screen relative" v-if="isWebGL2Available"></section>
   <UAlert v-else icon="i-heroicons-command-line" color="rose" variant="solid"
@@ -19,12 +21,13 @@
   display: flex; justify-content: center; align-items: center; z-index: 9999;
 }
 #controls-hint {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,0.7); color: #fff; padding: 12px 22px;
-  border-radius: 10px; z-index: 100; text-align: center; font: 14px Arial;
-  pointer-events: none;
+  position: fixed; top: 50%; left: 12px; transform: translateY(-50%);
+  background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.85);
+  padding: 10px 14px; border-radius: 8px; z-index: 100;
+  text-align: left; font: 12px Arial; pointer-events: none;
+  backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1);
 }
-#controls-hint p { margin: 3px 0; }
+#controls-hint p { margin: 2px 0; white-space: nowrap; }
 </style>
 
 <script setup>
@@ -148,7 +151,7 @@ export default {
         [helper.getRandomInt(-50, 50), helper.getRandomInt(18, 35), helper.getRandomInt(-40, 40)], true);
     }
 
-    setTimeout(() => { this.showControlsHint = false; }, 10000);
+    // Controls hint is always visible on the left
   },
 
   methods: {
@@ -161,7 +164,7 @@ export default {
       const panels = [
         {
           title: 'Creative Web Experiences',
-          text: 'Crafting immersive, interactive web apps with modern JavaScript frameworks. Horus is this 3D explorable portfolio built with Three.js, Nuxt.js and Vue.js featuring procedural world generation. WinXp faithfully recreates the Windows XP desktop experience as a portfolio using Next.js and React. Mocking-Bird explores creative frontend patterns with TypeScript.',
+          text: 'Crafting immersive, interactive web applications with modern JavaScript frameworks. Horus is this 3D explorable portfolio built with Three.js, Nuxt.js and Vue.js featuring procedural world generation. WinXp faithfully recreates the Windows XP desktop experience as a portfolio using Next.js and React. Mocking-Bird explores creative frontend patterns with TypeScript.',
           urls: [
             { url: 'https://github.com/ashrafbeshtawi/Horus', title: 'Horus' },
             { url: 'https://github.com/ashrafbeshtawi/WinXp', title: 'WinXp' },
@@ -181,20 +184,23 @@ export default {
           x: -(SQ - 1), z: 0,   // West side of square
         },
         {
-          title: 'Web3 & Blockchain',
-          text: 'Pioneering blockchain integration for real-world assets. Landlord is a full-stack DeFi platform enabling fractional real estate investment through tokenization. Built with TypeScript, it demonstrates deep expertise in smart contract development, decentralized application architecture, and Web3 wallet integration.',
+          title: 'Web3, Blockchain & Mobile',
+          text: 'Pioneering blockchain integration and native mobile development. Landlord is a full-stack DeFi platform enabling fractional real estate investment through tokenization with smart contracts and Web3 wallet integration. Casually is a native Android app built with Kotlin, MVVM architecture, and Material Design.',
           urls: [
             { url: 'https://landlord-liart.vercel.app/', title: 'Landlord App' },
             { url: 'https://github.com/ashrafbeshtawi/Landlord', title: 'Landlord Code' },
+            { url: 'https://github.com/ashrafbeshtawi/Casually', title: 'Casually' },
           ],
           imageUrl: '/img/web3.png',
           x: (SQ - 1), z: 0,    // East side of square
         },
         {
-          title: 'Mobile Development',
-          text: 'Native mobile app development with Kotlin and modern Android architecture patterns. Casually is a mobile application built with Kotlin showcasing MVVM architecture, clean code principles, Material Design components, and responsive mobile UI that adapts across device sizes.',
+          title: 'Certifications',
+          text: 'Verified professional certifications demonstrating deep expertise. Symfony 7 Fundamentals covers services, configuration and environments. Cosmic Coding with Symfony 7 is an advanced deep-dive into the framework. Claude Code in Action from Anthropic Academy covers AI coding assistant integration, tool use systems, and GitHub workflow automation.',
           urls: [
-            { url: 'https://github.com/ashrafbeshtawi/Casually', title: 'Casually' },
+            { url: 'https://symfonycasts.com/certificates/35CD1309C158', title: 'Symfony 7' },
+            { url: 'https://symfonycasts.com/certificates/2AA8BB96C155', title: 'Cosmic Coding' },
+            { url: 'https://verify.skilljar.com/c/da6mfrh4vqiz', title: 'Claude Code' },
           ],
           imageUrl: '/img/backend.png',
           x: 0, z: -(SQ - 1),   // North side of square

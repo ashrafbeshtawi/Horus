@@ -4,6 +4,17 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+  app: {
+    head: {
+      title: 'Ashraf Beshtawi — Portfolio',
+      meta: [
+        { name: 'description', content: 'Explore Ashraf Beshtawi\'s interactive 3D portfolio — walk through a procedural city and discover projects in AI, Web3, Frontend, and Mobile development.' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      ],
+    },
+  },
   modules: [
       '@tresjs/nuxt',
       '@nuxt/ui',
