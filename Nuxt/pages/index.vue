@@ -2,12 +2,21 @@
   <div v-if="!animationStarted" id="overlay">
     <v-btn size="x-large" color="primary" @click="startAnimation">Start your Adventure</v-btn>
   </div>
-  <div id="controls-hint" v-if="controlsEnabled">
+  <div id="controls-hint" v-if="controlsEnabled && !isMobile">
     <p>W / Up &mdash; Forward</p>
     <p>S / Down &mdash; Backward</p>
     <p>A/D / Left/Right &mdash; Turn</p>
     <p>Right Drag &mdash; Free Look</p>
     <p>Scroll &mdash; Zoom</p>
+  </div>
+  <!-- Mobile joystick -->
+  <div id="joystick-zone" v-if="controlsEnabled && isMobile"
+    @touchstart.prevent="onJoystickStart"
+    @touchmove.prevent="onJoystickMove"
+    @touchend.prevent="onJoystickEnd">
+    <div id="joystick-base">
+      <div id="joystick-knob" :style="joystickKnobStyle"></div>
+    </div>
   </div>
   <section id="container" class="w-full h-screen relative" v-if="isWebGL2Available"></section>
   <UAlert v-else icon="i-heroicons-command-line" color="rose" variant="solid"
@@ -21,13 +30,29 @@
   display: flex; justify-content: center; align-items: center; z-index: 9999;
 }
 #controls-hint {
-  position: fixed; top: 50%; left: 12px; transform: translateY(-50%);
-  background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.85);
-  padding: 10px 14px; border-radius: 8px; z-index: 100;
-  text-align: left; font: 12px Arial; pointer-events: none;
-  backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1);
+  position: fixed; bottom: 14px; left: 14px;
+  background: rgba(0,0,0,0.35); color: rgba(255,255,255,0.8);
+  padding: 8px 12px; border-radius: 8px; z-index: 100;
+  text-align: left; font: 11px Arial; pointer-events: none;
+  backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.08);
 }
 #controls-hint p { margin: 2px 0; white-space: nowrap; }
+#joystick-zone {
+  position: fixed; bottom: 20px; left: 20px; width: 140px; height: 140px;
+  z-index: 200; touch-action: none;
+}
+#joystick-base {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3);
+  position: absolute; top: 10px; left: 10px;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+#joystick-knob {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.5); border: 2px solid rgba(255,255,255,0.7);
+  position: absolute; transition: none;
+}
 </style>
 
 <script setup>
@@ -76,11 +101,18 @@ export default {
 
       introPlaying: false,
       controlsEnabled: false,
+
+      // Mobile
+      isMobile: false,
+      joystickActive: false,
+      joystickX: 0,  // -1 to 1
+      joystickY: 0,  // -1 to 1
+      joystickBaseCenter: { x: 0, y: 0 },
     }
   },
 
   beforeUnmount() {
-    for (const e of ['keydown','keyup','mousedown','mouseup','mousemove','click','wheel','resize','contextmenu'])
+    for (const e of ['keydown','keyup','mousedown','mouseup','mousemove','click','wheel','resize','contextmenu','touchstart','touchmove','touchend'])
       window.removeEventListener(e, this['_h_' + e]);
   },
 
@@ -93,6 +125,7 @@ export default {
     this.mouse = new THREE.Vector2();
     this._fwd = new THREE.Vector3();
     this._mv = new THREE.Vector3();
+    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     const H = {
       keydown: e => { this.keys[e.code] = true; },
@@ -116,6 +149,32 @@ export default {
         }
       },
       contextmenu: e => e.preventDefault(),
+      // Mobile: touch on right half of screen = camera look
+      touchstart: e => {
+        if (!this.controlsEnabled) return;
+        const t = e.touches[e.touches.length - 1];
+        if (t.clientX > window.innerWidth * 0.4) {
+          this._cameraTouchId = t.identifier;
+          this._cameraTouchX = t.clientX;
+          this._cameraTouchY = t.clientY;
+        }
+      },
+      touchmove: e => {
+        if (this._cameraTouchId == null) return;
+        for (const t of e.touches) {
+          if (t.identifier === this._cameraTouchId) {
+            this.cameraAngleX -= (t.clientX - this._cameraTouchX) * 0.004;
+            this.cameraAngleY = Math.max(0.1, Math.min(1.3, this.cameraAngleY + (t.clientY - this._cameraTouchY) * 0.004));
+            this._cameraTouchX = t.clientX;
+            this._cameraTouchY = t.clientY;
+          }
+        }
+      },
+      touchend: e => {
+        for (const t of e.changedTouches) {
+          if (t.identifier === this._cameraTouchId) this._cameraTouchId = null;
+        }
+      },
     };
     for (const [e, fn] of Object.entries(H)) { this['_h_' + e] = fn; window.addEventListener(e, fn); }
 
@@ -259,15 +318,29 @@ export default {
 
     updateMovement(delta) {
       if (!this.character) return;
+
+      // Keyboard turn
       if (this.keys['ArrowLeft'] || this.keys['KeyA']) this.cameraAngleX += this.turnSpeed;
       if (this.keys['ArrowRight'] || this.keys['KeyD']) this.cameraAngleX -= this.turnSpeed;
+      // Joystick turn (horizontal axis)
+      if (this.joystickActive && Math.abs(this.joystickX) > 0.2) {
+        this.cameraAngleX -= this.joystickX * this.turnSpeed * 1.2;
+      }
 
       const fwd = this._fwd;
       fwd.set(-Math.sin(this.cameraAngleX), 0, -Math.cos(this.cameraAngleX));
       const mv = this._mv; mv.set(0, 0, 0);
       let isMoving = false;
+
+      // Keyboard movement
       if (this.keys['ArrowUp'] || this.keys['KeyW']) { mv.x += fwd.x; mv.z += fwd.z; isMoving = true; }
       if (this.keys['ArrowDown'] || this.keys['KeyS']) { mv.x -= fwd.x; mv.z -= fwd.z; isMoving = true; }
+      // Joystick movement (vertical axis = forward/back)
+      if (this.joystickActive && Math.abs(this.joystickY) > 0.2) {
+        mv.x -= fwd.x * this.joystickY;
+        mv.z -= fwd.z * this.joystickY;
+        isMoving = true;
+      }
 
       if (isMoving) {
         mv.normalize().multiplyScalar(this.characterSpeed);
@@ -318,6 +391,44 @@ export default {
           }
         }
       }
+    },
+
+    // --- Mobile joystick ---
+    onJoystickStart(e) {
+      this.joystickActive = true;
+      const base = this.$el.querySelector('#joystick-base');
+      if (base) {
+        const r = base.getBoundingClientRect();
+        this.joystickBaseCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+      this.onJoystickMove(e);
+    },
+    onJoystickMove(e) {
+      if (!this.joystickActive || !e.touches.length) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - this.joystickBaseCenter.x;
+      const dy = touch.clientY - this.joystickBaseCenter.y;
+      const maxR = 38; // max offset from center
+      const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxR);
+      const angle = Math.atan2(dy, dx);
+      this.joystickX = (Math.cos(angle) * dist) / maxR;
+      this.joystickY = (Math.sin(angle) * dist) / maxR;
+    },
+    onJoystickEnd() {
+      this.joystickActive = false;
+      this.joystickX = 0;
+      this.joystickY = 0;
+    },
+  },
+
+  computed: {
+    joystickKnobStyle() {
+      const ox = this.joystickX * 38;
+      const oy = this.joystickY * 38;
+      return {
+        transform: `translate(${ox}px, ${oy}px)`,
+        left: '38px', top: '38px',
+      };
     },
   },
 };
