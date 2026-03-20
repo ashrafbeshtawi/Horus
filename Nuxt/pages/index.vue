@@ -151,13 +151,19 @@ export default {
       contextmenu: e => e.preventDefault(),
       // Mobile: touch on right half of screen = camera look
       touchstart: e => {
-        if (!this.controlsEnabled) return;
-        const t = e.touches[e.touches.length - 1];
-        if (t.clientX > window.innerWidth * 0.4) {
+        if (!this.controlsEnabled || !this.isMobile) return;
+        // Delay slightly so joystick handler can claim its touch first
+        setTimeout(() => {
+          const t = e.touches[e.touches.length - 1];
+          if (!t) return;
+          // Skip if this touch is already the joystick
+          if (this._joystickTouchId != null && t.identifier === this._joystickTouchId) return;
+          // Skip if in joystick area
+          if (t.clientX < 180 && t.clientY > window.innerHeight - 180) return;
           this._cameraTouchId = t.identifier;
           this._cameraTouchX = t.clientX;
           this._cameraTouchY = t.clientY;
-        }
+        }, 0);
       },
       touchmove: e => {
         if (this._cameraTouchId == null) return;
@@ -335,15 +341,16 @@ export default {
       // Keyboard movement
       if (this.keys['ArrowUp'] || this.keys['KeyW']) { mv.x += fwd.x; mv.z += fwd.z; isMoving = true; }
       if (this.keys['ArrowDown'] || this.keys['KeyS']) { mv.x -= fwd.x; mv.z -= fwd.z; isMoving = true; }
-      // Joystick movement (vertical axis = forward/back)
+      // Joystick movement (push up = forward, push down = backward)
       if (this.joystickActive && Math.abs(this.joystickY) > 0.2) {
-        mv.x -= fwd.x * this.joystickY;
-        mv.z -= fwd.z * this.joystickY;
+        mv.x += fwd.x * -this.joystickY;
+        mv.z += fwd.z * -this.joystickY;
         isMoving = true;
       }
 
       if (isMoving) {
-        mv.normalize().multiplyScalar(this.characterSpeed);
+        const speed = this.isMobile ? this.characterSpeed * 0.55 : this.characterSpeed;
+        mv.normalize().multiplyScalar(speed);
         const nx = this.character.position.x + mv.x, nz = this.character.position.z + mv.z;
         const colliders = this.worldObjs?.colliders;
         if (g.canMoveTo(nx, nz, colliders)) {
@@ -395,29 +402,40 @@ export default {
 
     // --- Mobile joystick ---
     onJoystickStart(e) {
+      if (!e.touches.length) return;
+      const t = e.touches[0];
       this.joystickActive = true;
-      const base = this.$el.querySelector('#joystick-base');
-      if (base) {
-        const r = base.getBoundingClientRect();
-        this.joystickBaseCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-      }
-      this.onJoystickMove(e);
-    },
-    onJoystickMove(e) {
-      if (!this.joystickActive || !e.touches.length) return;
-      const touch = e.touches[0];
-      const dx = touch.clientX - this.joystickBaseCenter.x;
-      const dy = touch.clientY - this.joystickBaseCenter.y;
-      const maxR = 38; // max offset from center
-      const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxR);
-      const angle = Math.atan2(dy, dx);
-      this.joystickX = (Math.cos(angle) * dist) / maxR;
-      this.joystickY = (Math.sin(angle) * dist) / maxR;
-    },
-    onJoystickEnd() {
-      this.joystickActive = false;
+      this._joystickTouchId = t.identifier;
+      // Use initial touch position as center (where finger first touches)
+      this._joystickOriginX = t.clientX;
+      this._joystickOriginY = t.clientY;
       this.joystickX = 0;
       this.joystickY = 0;
+    },
+    onJoystickMove(e) {
+      if (!this.joystickActive) return;
+      for (const t of e.touches) {
+        if (t.identifier === this._joystickTouchId) {
+          const dx = t.clientX - this._joystickOriginX;
+          const dy = t.clientY - this._joystickOriginY;
+          const maxR = 38;
+          const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxR);
+          if (dist < 2) { this.joystickX = 0; this.joystickY = 0; return; }
+          this.joystickX = (dx / dist) * (dist / maxR);
+          this.joystickY = (dy / dist) * (dist / maxR);
+          return;
+        }
+      }
+    },
+    onJoystickEnd(e) {
+      for (const t of e.changedTouches) {
+        if (t.identifier === this._joystickTouchId) {
+          this.joystickActive = false;
+          this.joystickX = 0;
+          this.joystickY = 0;
+          this._joystickTouchId = null;
+        }
+      }
     },
   },
 
