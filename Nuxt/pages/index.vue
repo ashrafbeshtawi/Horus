@@ -349,8 +349,7 @@ export default {
       }
 
       if (isMoving) {
-        const speed = this.isMobile ? this.characterSpeed * 0.55 : this.characterSpeed;
-        mv.normalize().multiplyScalar(speed);
+        mv.normalize().multiplyScalar(this.characterSpeed * 0.55);
         const nx = this.character.position.x + mv.x, nz = this.character.position.z + mv.z;
         const colliders = this.worldObjs?.colliders;
         if (g.canMoveTo(nx, nz, colliders)) {
